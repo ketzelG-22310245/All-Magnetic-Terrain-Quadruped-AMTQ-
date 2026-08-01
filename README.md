@@ -173,11 +173,9 @@ The platform has evolved through multiple iterations, progressively improving lo
 
 # Robot Overview
 
-> **Insert a high-resolution photograph of the complete robot here.**
-
-```text
-images/robot_overview.png
-```
+<p align="center">
+    <img src="AMTQ_COMPLETE.jpg" width="100%">
+</p>
 
 The AMTQ platform represents the integration of mechanical engineering, embedded systems, control theory, and robotics into a fully functional experimental platform.
 
