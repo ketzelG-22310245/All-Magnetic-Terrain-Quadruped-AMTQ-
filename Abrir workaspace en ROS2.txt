@@ -1,0 +1,6 @@
+cd /mnt/c/Users/ketze/Desktop/AMTQ_2.0/AMTQ_V2_DEFINITIVO/ros2_ws
+colcon build --symlink-install
+source install/setup.bash
+ros2 launch urdf_tutorial display.launch.py \
+  model:=$(ros2 pkg prefix --share quadruped_description)/quadruped/robot.urdf \
+  rviz_config:=$(ros2 pkg prefix --share quadruped_description)/rviz/view_robot.rviz

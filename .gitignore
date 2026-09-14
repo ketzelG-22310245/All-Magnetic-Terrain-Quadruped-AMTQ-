@@ -1,1 +1,10 @@
-*.mov
+# Excluir carpetas compiladas de ROS 2
+ros2_ws/build/
+ros2_ws/install/
+ros2_ws/log/
+
+# Excluir archivos temporales y de Python
+__pycache__/
+*.pyc
+.DS_Store
+Thumbs.db

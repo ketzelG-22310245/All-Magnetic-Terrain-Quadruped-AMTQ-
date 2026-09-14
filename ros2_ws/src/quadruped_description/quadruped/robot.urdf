@@ -1,0 +1,1027 @@
+<?xml version="1.0" ?>
+<!-- Generated using onshape-to-robot -->
+<!-- Onshape document_id: c21ae762a09fb4883e987292 -->
+<robot name="amtq_v2">
+  <!-- Link base_link -->
+  <link name="base_link">
+    <inertial>
+      <origin xyz="8.55676e-05 -2.37343e-05 0.00587907" rpy="0 0 0"/>
+      <mass value="0.606058"/>
+      <inertia ixx="0.00151408" ixy="7.40986e-07" ixz="1.59978e-06" iyy="0.00241425" iyz="1.13118e-06" izz="0.00364696"/>
+    </inertial>
+    <!-- Part base_link -->
+    <visual>
+      <origin xyz="-0 0 -0.0125" rpy="0 -0 0"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/base_link.stl"/>
+      </geometry>
+      <material name="base_link">
+        <color rgba="0.792157 0.819608 0.933333 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0 0 -0.0125" rpy="0 -0 0"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/base_link.stl"/>
+      </geometry>
+    </collision>
+    <!-- Part support_left_3__3_5__3_5__diameter_hole1 -->
+    <visual>
+      <origin xyz="-0.033 -0.065 -0.0125" rpy="0 -0 0"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/support_left_3__3_5__3_5__diameter_hole1.stl"/>
+      </geometry>
+      <material name="support_left_3__3_5__3_5__diameter_hole1_material">
+        <color rgba="0.792157 0.819608 0.933333 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.033 -0.065 -0.0125" rpy="0 -0 0"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/support_left_3__3_5__3_5__diameter_hole1.stl"/>
+      </geometry>
+    </collision>
+    <!-- Part support_right_3__3_5__3_5__diameter_hole1 -->
+    <visual>
+      <origin xyz="0.033 -0.029 -0.0125" rpy="-0 0 3.14159"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/support_right_3__3_5__3_5__diameter_hole1.stl"/>
+      </geometry>
+      <material name="support_right_3__3_5__3_5__diameter_hole1_material">
+        <color rgba="0.792157 0.819608 0.933333 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.033 -0.029 -0.0125" rpy="-0 0 3.14159"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/support_right_3__3_5__3_5__diameter_hole1.stl"/>
+      </geometry>
+    </collision>
+    <!-- Part servo_motor_35kg__body9 -->
+    <visual>
+      <origin xyz="-0.0802 0.0649 0.0403" rpy="0 -0 -1.5708"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/servo_motor_35kg__body9.stl"/>
+      </geometry>
+      <material name="servo_motor_35kg__body9_material">
+        <color rgba="0.792157 0.819608 0.933333 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.0802 0.0649 0.0403" rpy="0 -0 -1.5708"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/servo_motor_35kg__body9.stl"/>
+      </geometry>
+    </collision>
+    <!-- Part support_right_3__3_5__3_5__diameter_hole1_2 -->
+    <visual>
+      <origin xyz="-0.033 0.029 -0.0125" rpy="0 -0 0"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/support_right_3__3_5__3_5__diameter_hole1.stl"/>
+      </geometry>
+      <material name="support_right_3__3_5__3_5__diameter_hole1_2_material">
+        <color rgba="0.792157 0.819608 0.933333 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.033 0.029 -0.0125" rpy="0 -0 0"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/support_right_3__3_5__3_5__diameter_hole1.stl"/>
+      </geometry>
+    </collision>
+    <!-- Part servo_motor_35kg__body9_2 -->
+    <visual>
+      <origin xyz="-0.0802 -0.0649 0.0403" rpy="-0 0 1.5708"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/servo_motor_35kg__body9.stl"/>
+      </geometry>
+      <material name="servo_motor_35kg__body9_2_material">
+        <color rgba="0.792157 0.819608 0.933333 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.0802 -0.0649 0.0403" rpy="-0 0 1.5708"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/servo_motor_35kg__body9.stl"/>
+      </geometry>
+    </collision>
+    <!-- Part base_link -->
+    <visual>
+      <origin xyz="0 -0 0.0175" rpy="0 -0 0"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/base_link.stl"/>
+      </geometry>
+      <material name="base_link_material">
+        <color rgba="0.792157 0.819608 0.933333 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 -0 0.0175" rpy="0 -0 0"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/base_link.stl"/>
+      </geometry>
+    </collision>
+    <!-- Part servo_motor_35kg__body9_3 -->
+    <visual>
+      <origin xyz="0.0802 0.0649 0.0403" rpy="0 -0 -1.5708"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/servo_motor_35kg__body9.stl"/>
+      </geometry>
+      <material name="servo_motor_35kg__body9_3_material">
+        <color rgba="0.792157 0.819608 0.933333 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.0802 0.0649 0.0403" rpy="0 -0 -1.5708"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/servo_motor_35kg__body9.stl"/>
+      </geometry>
+    </collision>
+    <!-- Part servo_motor_35kg__body9_4 -->
+    <visual>
+      <origin xyz="0.0802 -0.0649 0.0403" rpy="-0 0 1.5708"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/servo_motor_35kg__body9.stl"/>
+      </geometry>
+      <material name="servo_motor_35kg__body9_4_material">
+        <color rgba="0.792157 0.819608 0.933333 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.0802 -0.0649 0.0403" rpy="-0 0 1.5708"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/servo_motor_35kg__body9.stl"/>
+      </geometry>
+    </collision>
+    <!-- Part case__cut_extrude7 -->
+    <visual>
+      <origin xyz="0 -0 -0.0125" rpy="1.5708 -0 0"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/case__cut_extrude7.stl"/>
+      </geometry>
+      <material name="case__cut_extrude7_material">
+        <color rgba="0.792157 0.819608 0.933333 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 -0 -0.0125" rpy="1.5708 -0 0"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/case__cut_extrude7.stl"/>
+      </geometry>
+    </collision>
+    <!-- Part servo_holder_3__boss_extrude1 -->
+    <visual>
+      <origin xyz="0.053 -0.014 0.0175" rpy="-0 0 -3.14159"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/servo_holder_3__boss_extrude1.stl"/>
+      </geometry>
+      <material name="servo_holder_3__boss_extrude1_material">
+        <color rgba="0.792157 0.819608 0.933333 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.053 -0.014 0.0175" rpy="-0 0 -3.14159"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/servo_holder_3__boss_extrude1.stl"/>
+      </geometry>
+    </collision>
+    <!-- Part servo_holder_3__boss_extrude1_2 -->
+    <visual>
+      <origin xyz="-0.053 0.014 0.0175" rpy="-0 -0 0"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/servo_holder_3__boss_extrude1.stl"/>
+      </geometry>
+      <material name="servo_holder_3__boss_extrude1_2_material">
+        <color rgba="0.792157 0.819608 0.933333 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.053 0.014 0.0175" rpy="-0 -0 0"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/servo_holder_3__boss_extrude1.stl"/>
+      </geometry>
+    </collision>
+    <!-- Part servo_holder_3__boss_extrude1_3 -->
+    <visual>
+      <origin xyz="0.053 0.014 0.0225" rpy="-3.14159 0 -3.14159"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/servo_holder_3__boss_extrude1.stl"/>
+      </geometry>
+      <material name="servo_holder_3__boss_extrude1_3_material">
+        <color rgba="0.792157 0.819608 0.933333 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.053 0.014 0.0225" rpy="-3.14159 0 -3.14159"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/servo_holder_3__boss_extrude1.stl"/>
+      </geometry>
+    </collision>
+    <!-- Part servo_holder_3__boss_extrude1_4 -->
+    <visual>
+      <origin xyz="-0.053 -0.014 0.0225" rpy="3.14159 -0 0"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/servo_holder_3__boss_extrude1.stl"/>
+      </geometry>
+      <material name="servo_holder_3__boss_extrude1_4_material">
+        <color rgba="0.792157 0.819608 0.933333 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.053 -0.014 0.0225" rpy="3.14159 -0 0"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/servo_holder_3__boss_extrude1.stl"/>
+      </geometry>
+    </collision>
+    <!-- Part support_left_3__3_5__3_5__diameter_hole1_2 -->
+    <visual>
+      <origin xyz="0.033 0.065 -0.015" rpy="-0 0 -3.14159"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/support_left_3__3_5__3_5__diameter_hole1.stl"/>
+      </geometry>
+      <material name="support_left_3__3_5__3_5__diameter_hole1_2_material">
+        <color rgba="0.792157 0.819608 0.933333 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.033 0.065 -0.015" rpy="-0 0 -3.14159"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/support_left_3__3_5__3_5__diameter_hole1.stl"/>
+      </geometry>
+    </collision>
+  </link>
+  <!-- Link servo_motor_25kg__body9 -->
+  <link name="servo_motor_25kg__body9">
+    <inertial>
+      <origin xyz="0.0417351 0.000257951 0.0215166" rpy="0 0 0"/>
+      <mass value="0.107119"/>
+      <inertia ixx="4.49729e-05" ixy="1.73628e-06" ixz="-5.86438e-07" iyy="5.62655e-05" iyz="1.24639e-06" izz="3.74424e-05"/>
+    </inertial>
+    <!-- Part aluminium_25t_servo_horn_3__body1 -->
+    <visual>
+      <origin xyz="-0 -0 -0.006" rpy="-3.14159 -0 0"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/aluminium_25t_servo_horn_3__body1.stl"/>
+      </geometry>
+      <material name="aluminium_25t_servo_horn_3__body1_material">
+        <color rgba="0.792157 0.819608 0.933333 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0 -0 -0.006" rpy="-3.14159 -0 0"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/aluminium_25t_servo_horn_3__body1.stl"/>
+      </geometry>
+    </collision>
+    <!-- Part arm_1_3__cut_extrude2 -->
+    <visual>
+      <origin xyz="0.04 -0.01 -0.008" rpy="3.14159 0 1.5708"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/arm_1_3__cut_extrude2.stl"/>
+      </geometry>
+      <material name="arm_1_3__cut_extrude2_material">
+        <color rgba="0.792157 0.819608 0.933333 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.04 -0.01 -0.008" rpy="3.14159 0 1.5708"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/arm_1_3__cut_extrude2.stl"/>
+      </geometry>
+    </collision>
+    <!-- Part servo_motor_25kg__body9 -->
+    <visual>
+      <origin xyz="0.0504 -0.0278 0.0111" rpy="1.5708 -1.5708 0"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/servo_motor_25kg__body9.stl"/>
+      </geometry>
+      <material name="servo_motor_25kg__body9_material">
+        <color rgba="0.792157 0.819608 0.933333 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.0504 -0.0278 0.0111" rpy="1.5708 -1.5708 0"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/servo_motor_25kg__body9.stl"/>
+      </geometry>
+    </collision>
+  </link>
+  <!-- Link aluminium_25t_servo_horn_3__body1 -->
+  <link name="aluminium_25t_servo_horn_3__body1">
+    <inertial>
+      <origin xyz="0.04 -3.237e-09 0.0222615" rpy="0 0 0"/>
+      <mass value="0.0596212"/>
+      <inertia ixx="3.56761e-05" ixy="6.181e-09" ixz="3.4e-11" iyy="6.3183e-05" iyz="-5e-12" izz="3.13307e-05"/>
+    </inertial>
+    <!-- Part aluminium_25t_servo_horn_3__body1_2 -->
+    <visual>
+      <origin xyz="0.08 0 -0.006" rpy="-3.14159 0 3.14159"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/aluminium_25t_servo_horn_3__body1.stl"/>
+      </geometry>
+      <material name="aluminium_25t_servo_horn_3__body1_2_material">
+        <color rgba="0.792157 0.819608 0.933333 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.08 0 -0.006" rpy="-3.14159 0 3.14159"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/aluminium_25t_servo_horn_3__body1.stl"/>
+      </geometry>
+    </collision>
+    <!-- Part arm_2_3__cut_extrude4 -->
+    <visual>
+      <origin xyz="-0.01 0.01 0.02415" rpy="3.14159 0 1.5708"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/arm_2_3__cut_extrude4.stl"/>
+      </geometry>
+      <material name="arm_2_3__cut_extrude4_material">
+        <color rgba="0.792157 0.819608 0.933333 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.01 0.01 0.02415" rpy="3.14159 0 1.5708"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/arm_2_3__cut_extrude4.stl"/>
+      </geometry>
+    </collision>
+    <!-- Part aluminium_25t_servo_horn_3__body1_3 -->
+    <visual>
+      <origin xyz="0 0 -0.006" rpy="3.14159 0 0"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/aluminium_25t_servo_horn_3__body1.stl"/>
+      </geometry>
+      <material name="aluminium_25t_servo_horn_3__body1_3_material">
+        <color rgba="0.792157 0.819608 0.933333 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 -0.006" rpy="3.14159 0 0"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/aluminium_25t_servo_horn_3__body1.stl"/>
+      </geometry>
+    </collision>
+  </link>
+  <!-- Link pata_con_iman__cut_extrude6 -->
+  <link name="pata_con_iman__cut_extrude6">
+    <inertial>
+      <origin xyz="0.0506376 -0.0508939 -0.0134724" rpy="0 0 0"/>
+      <mass value="0.221571"/>
+      <inertia ixx="0.000378807" ixy="0.000371037" ixz="-4.57756e-05" iyy="0.000535307" iyz="4.02038e-05" izz="0.000855183"/>
+    </inertial>
+    <!-- Part pata_con_iman__cut_extrude6 -->
+    <visual>
+      <origin xyz="-0.0279307 -0.000919239 0.0014" rpy="-2.35619 1.5708 0"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/pata_con_iman__cut_extrude6.stl"/>
+      </geometry>
+      <material name="pata_con_iman__cut_extrude6_material">
+        <color rgba="0.792157 0.819608 0.933333 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.0279307 -0.000919239 0.0014" rpy="-2.35619 1.5708 0"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/pata_con_iman__cut_extrude6.stl"/>
+      </geometry>
+    </collision>
+    <!-- Part servo_motor_25kg__body9_2 -->
+    <visual>
+      <origin xyz="-0 0 0.004" rpy="0 0 -0.785398"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/servo_motor_25kg__body9.stl"/>
+      </geometry>
+      <material name="servo_motor_25kg__body9_2_material">
+        <color rgba="0.792157 0.819608 0.933333 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0 0 0.004" rpy="0 0 -0.785398"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/servo_motor_25kg__body9.stl"/>
+      </geometry>
+    </collision>
+  </link>
+  <!-- Joint from aluminium_25t_servo_horn_3__body1 to pata_con_iman__cut_extrude6 -->
+  <joint name="front_left_tibia_joint" type="revolute">
+    <origin xyz="0.08 0 0" rpy="-3.14159 0 3.14159"/>
+    <parent link="aluminium_25t_servo_horn_3__body1"/>
+    <child link="pata_con_iman__cut_extrude6"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="10" velocity="10" lower="-0.783653" upper="0"/>
+  </joint>
+  <!-- Joint from servo_motor_25kg__body9 to aluminium_25t_servo_horn_3__body1 -->
+  <joint name="front_left_femur_joint" type="revolute">
+    <origin xyz="0.0504 -0.0238 0.0111" rpy="-1.5708 0.785398 0"/>
+    <parent link="servo_motor_25kg__body9"/>
+    <child link="aluminium_25t_servo_horn_3__body1"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="10" velocity="10" lower="0" upper="0.785398"/>
+  </joint>
+  <!-- Joint from base_link to servo_motor_25kg__body9 -->
+  <joint name="front_left_coxa_joint" type="revolute">
+    <origin xyz="0.0802 -0.0649 0.0363" rpy="-3.14159 0 -0.975724"/>
+    <parent link="base_link"/>
+    <child link="servo_motor_25kg__body9"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="10" velocity="10" lower="-1.76112" upper="0.595073"/>
+  </joint>
+  <!-- Link arm_1_3__cut_extrude2 -->
+  <link name="arm_1_3__cut_extrude2">
+    <inertial>
+      <origin xyz="0.0417351 0.000257951 0.0215166" rpy="0 0 0"/>
+      <mass value="0.107119"/>
+      <inertia ixx="4.49729e-05" ixy="1.73628e-06" ixz="-5.86438e-07" iyy="5.62655e-05" iyz="1.24639e-06" izz="3.74424e-05"/>
+    </inertial>
+    <!-- Part servo_motor_25kg__body9_3 -->
+    <visual>
+      <origin xyz="0.0504 -0.0278 0.0111" rpy="1.5708 -1.5708 0"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/servo_motor_25kg__body9.stl"/>
+      </geometry>
+      <material name="servo_motor_25kg__body9_3_material">
+        <color rgba="0.792157 0.819608 0.933333 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.0504 -0.0278 0.0111" rpy="1.5708 -1.5708 0"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/servo_motor_25kg__body9.stl"/>
+      </geometry>
+    </collision>
+    <!-- Part aluminium_25t_servo_horn_3__body1_4 -->
+    <visual>
+      <origin xyz="0 0 -0.006" rpy="-3.14159 -0 0"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/aluminium_25t_servo_horn_3__body1.stl"/>
+      </geometry>
+      <material name="aluminium_25t_servo_horn_3__body1_4_material">
+        <color rgba="0.792157 0.819608 0.933333 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 -0.006" rpy="-3.14159 -0 0"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/aluminium_25t_servo_horn_3__body1.stl"/>
+      </geometry>
+    </collision>
+    <!-- Part arm_1_3__cut_extrude2_2 -->
+    <visual>
+      <origin xyz="0.04 -0.01 -0.008" rpy="-3.14159 0 1.5708"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/arm_1_3__cut_extrude2.stl"/>
+      </geometry>
+      <material name="arm_1_3__cut_extrude2_2_material">
+        <color rgba="0.792157 0.819608 0.933333 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.04 -0.01 -0.008" rpy="-3.14159 0 1.5708"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/arm_1_3__cut_extrude2.stl"/>
+      </geometry>
+    </collision>
+  </link>
+  <!-- Link arm_2_3__cut_extrude4 -->
+  <link name="arm_2_3__cut_extrude4">
+    <inertial>
+      <origin xyz="0.04 -3.237e-09 0.0222615" rpy="0 0 0"/>
+      <mass value="0.0596212"/>
+      <inertia ixx="3.56761e-05" ixy="6.181e-09" ixz="3.4e-11" iyy="6.3183e-05" iyz="-5e-12" izz="3.13307e-05"/>
+    </inertial>
+    <!-- Part arm_2_3__cut_extrude4_2 -->
+    <visual>
+      <origin xyz="-0.01 0.01 0.02415" rpy="3.14159 0 1.5708"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/arm_2_3__cut_extrude4.stl"/>
+      </geometry>
+      <material name="arm_2_3__cut_extrude4_2_material">
+        <color rgba="0.792157 0.819608 0.933333 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.01 0.01 0.02415" rpy="3.14159 0 1.5708"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/arm_2_3__cut_extrude4.stl"/>
+      </geometry>
+    </collision>
+    <!-- Part aluminium_25t_servo_horn_3__body1_5 -->
+    <visual>
+      <origin xyz="0 0 -0.006" rpy="3.14159 0 0"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/aluminium_25t_servo_horn_3__body1.stl"/>
+      </geometry>
+      <material name="aluminium_25t_servo_horn_3__body1_5_material">
+        <color rgba="0.792157 0.819608 0.933333 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 -0.006" rpy="3.14159 0 0"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/aluminium_25t_servo_horn_3__body1.stl"/>
+      </geometry>
+    </collision>
+    <!-- Part aluminium_25t_servo_horn_3__body1_6 -->
+    <visual>
+      <origin xyz="0.08 0 -0.006" rpy="3.14159 0 3.14159"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/aluminium_25t_servo_horn_3__body1.stl"/>
+      </geometry>
+      <material name="aluminium_25t_servo_horn_3__body1_6_material">
+        <color rgba="0.792157 0.819608 0.933333 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.08 0 -0.006" rpy="3.14159 0 3.14159"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/aluminium_25t_servo_horn_3__body1.stl"/>
+      </geometry>
+    </collision>
+  </link>
+  <!-- Link pata_con_iman__cut_extrude6_2 -->
+  <link name="pata_con_iman__cut_extrude6_2">
+    <inertial>
+      <origin xyz="0.0506376 -0.0508939 -0.0134724" rpy="0 0 0"/>
+      <mass value="0.221571"/>
+      <inertia ixx="0.000378807" ixy="0.000371037" ixz="-4.57756e-05" iyy="0.000535307" iyz="4.02038e-05" izz="0.000855183"/>
+    </inertial>
+    <!-- Part servo_motor_25kg__body9_4 -->
+    <visual>
+      <origin xyz="-0 -0 0.004" rpy="-0 -0 -0.785398"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/servo_motor_25kg__body9.stl"/>
+      </geometry>
+      <material name="servo_motor_25kg__body9_4_material">
+        <color rgba="0.792157 0.819608 0.933333 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0 -0 0.004" rpy="-0 -0 -0.785398"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/servo_motor_25kg__body9.stl"/>
+      </geometry>
+    </collision>
+    <!-- Part pata_con_iman__cut_extrude6_2 -->
+    <visual>
+      <origin xyz="-0.0279307 -0.000919239 0.0014" rpy="-2.35619 1.5708 0"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/pata_con_iman__cut_extrude6.stl"/>
+      </geometry>
+      <material name="pata_con_iman__cut_extrude6_2_material">
+        <color rgba="0.792157 0.819608 0.933333 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.0279307 -0.000919239 0.0014" rpy="-2.35619 1.5708 0"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/pata_con_iman__cut_extrude6.stl"/>
+      </geometry>
+    </collision>
+  </link>
+  <!-- Joint from arm_2_3__cut_extrude4 to pata_con_iman__cut_extrude6_2 -->
+  <joint name="back_left_tibia_joint" type="revolute">
+    <origin xyz="0.08 0 0" rpy="3.14159 0 3.14159"/>
+    <parent link="arm_2_3__cut_extrude4"/>
+    <child link="pata_con_iman__cut_extrude6_2"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="10" velocity="10" lower="-0.783653" upper="0"/>
+  </joint>
+  <!-- Joint from arm_1_3__cut_extrude2 to arm_2_3__cut_extrude4 -->
+  <joint name="back_left_femur_joint" type="revolute">
+    <origin xyz="0.0504 -0.0238 0.0111" rpy="-1.5708 0.785398 0"/>
+    <parent link="arm_1_3__cut_extrude2"/>
+    <child link="arm_2_3__cut_extrude4"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="10" velocity="10" lower="-0" upper="0.785398"/>
+  </joint>
+  <!-- Joint from base_link to arm_1_3__cut_extrude2 -->
+  <joint name="back_left_coxa_joint" type="revolute">
+    <origin xyz="0.0802 0.0649 0.0363" rpy="3.14159 -0 0.616711"/>
+    <parent link="base_link"/>
+    <child link="arm_1_3__cut_extrude2"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="10" velocity="10" lower="-0.954085" upper="1.40211"/>
+  </joint>
+  <!-- Link arm_1_3__cut_extrude2_2 -->
+  <link name="arm_1_3__cut_extrude2_2">
+    <inertial>
+      <origin xyz="0.0417351 0.000257951 0.0215166" rpy="0 0 0"/>
+      <mass value="0.107119"/>
+      <inertia ixx="4.49729e-05" ixy="1.73628e-06" ixz="-5.86438e-07" iyy="5.62655e-05" iyz="1.24639e-06" izz="3.74424e-05"/>
+    </inertial>
+    <!-- Part servo_motor_25kg__body9_5 -->
+    <visual>
+      <origin xyz="0.0504 -0.0278 0.0111" rpy="1.5708 -1.5708 0"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/servo_motor_25kg__body9.stl"/>
+      </geometry>
+      <material name="servo_motor_25kg__body9_5_material">
+        <color rgba="0.792157 0.819608 0.933333 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.0504 -0.0278 0.0111" rpy="1.5708 -1.5708 0"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/servo_motor_25kg__body9.stl"/>
+      </geometry>
+    </collision>
+    <!-- Part aluminium_25t_servo_horn_3__body1_7 -->
+    <visual>
+      <origin xyz="-0 0 -0.006" rpy="-3.14159 -0 0"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/aluminium_25t_servo_horn_3__body1.stl"/>
+      </geometry>
+      <material name="aluminium_25t_servo_horn_3__body1_7_material">
+        <color rgba="0.792157 0.819608 0.933333 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0 0 -0.006" rpy="-3.14159 -0 0"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/aluminium_25t_servo_horn_3__body1.stl"/>
+      </geometry>
+    </collision>
+    <!-- Part arm_1_3__cut_extrude2_3 -->
+    <visual>
+      <origin xyz="0.04 -0.01 -0.008" rpy="3.14159 0 1.5708"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/arm_1_3__cut_extrude2.stl"/>
+      </geometry>
+      <material name="arm_1_3__cut_extrude2_3_material">
+        <color rgba="0.792157 0.819608 0.933333 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.04 -0.01 -0.008" rpy="3.14159 0 1.5708"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/arm_1_3__cut_extrude2.stl"/>
+      </geometry>
+    </collision>
+  </link>
+  <!-- Link arm_2_3__cut_extrude4_2 -->
+  <link name="arm_2_3__cut_extrude4_2">
+    <inertial>
+      <origin xyz="0.04 -3.237e-09 0.0222615" rpy="0 0 0"/>
+      <mass value="0.0596212"/>
+      <inertia ixx="3.56761e-05" ixy="6.181e-09" ixz="3.4e-11" iyy="6.3183e-05" iyz="-5e-12" izz="3.13307e-05"/>
+    </inertial>
+    <!-- Part aluminium_25t_servo_horn_3__body1_8 -->
+    <visual>
+      <origin xyz="0.08 -0 -0.006" rpy="-3.14159 0 3.14159"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/aluminium_25t_servo_horn_3__body1.stl"/>
+      </geometry>
+      <material name="aluminium_25t_servo_horn_3__body1_8_material">
+        <color rgba="0.792157 0.819608 0.933333 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.08 -0 -0.006" rpy="-3.14159 0 3.14159"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/aluminium_25t_servo_horn_3__body1.stl"/>
+      </geometry>
+    </collision>
+    <!-- Part aluminium_25t_servo_horn_3__body1_9 -->
+    <visual>
+      <origin xyz="0 -0 -0.006" rpy="3.14159 -0 0"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/aluminium_25t_servo_horn_3__body1.stl"/>
+      </geometry>
+      <material name="aluminium_25t_servo_horn_3__body1_9_material">
+        <color rgba="0.792157 0.819608 0.933333 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 -0 -0.006" rpy="3.14159 -0 0"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/aluminium_25t_servo_horn_3__body1.stl"/>
+      </geometry>
+    </collision>
+    <!-- Part arm_2_3__cut_extrude4_3 -->
+    <visual>
+      <origin xyz="-0.01 0.01 0.02415" rpy="3.14159 0 1.5708"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/arm_2_3__cut_extrude4.stl"/>
+      </geometry>
+      <material name="arm_2_3__cut_extrude4_3_material">
+        <color rgba="0.792157 0.819608 0.933333 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.01 0.01 0.02415" rpy="3.14159 0 1.5708"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/arm_2_3__cut_extrude4.stl"/>
+      </geometry>
+    </collision>
+  </link>
+  <!-- Link pata_con_iman__cut_extrude6_3 -->
+  <link name="pata_con_iman__cut_extrude6_3">
+    <inertial>
+      <origin xyz="0.0506369 -0.0508946 -0.0134724" rpy="0 0 0"/>
+      <mass value="0.221571"/>
+      <inertia ixx="0.000378817" ixy="0.00037104" ixz="-4.5775e-05" iyy="0.000535297" iyz="4.02045e-05" izz="0.000855183"/>
+    </inertial>
+    <!-- Part pata_con_iman__cut_extrude6_3 -->
+    <visual>
+      <origin xyz="-0.0279307 -0.000918854 0.0014" rpy="-2.35618 1.5708 0"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/pata_con_iman__cut_extrude6.stl"/>
+      </geometry>
+      <material name="pata_con_iman__cut_extrude6_3_material">
+        <color rgba="0.792157 0.819608 0.933333 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.0279307 -0.000918854 0.0014" rpy="-2.35618 1.5708 0"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/pata_con_iman__cut_extrude6.stl"/>
+      </geometry>
+    </collision>
+    <!-- Part servo_motor_25kg__body9_6 -->
+    <visual>
+      <origin xyz="-0 0 0.004" rpy="0 0 -0.785412"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/servo_motor_25kg__body9.stl"/>
+      </geometry>
+      <material name="servo_motor_25kg__body9_6_material">
+        <color rgba="0.792157 0.819608 0.933333 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0 0 0.004" rpy="0 0 -0.785412"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/servo_motor_25kg__body9.stl"/>
+      </geometry>
+    </collision>
+  </link>
+  <!-- Joint from arm_2_3__cut_extrude4_2 to pata_con_iman__cut_extrude6_3 -->
+  <joint name="back_right_tibia_joint" type="revolute">
+    <origin xyz="0.08 -0 0" rpy="-3.14159 0 3.14159"/>
+    <parent link="arm_2_3__cut_extrude4_2"/>
+    <child link="pata_con_iman__cut_extrude6_3"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="10" velocity="10" lower="-1.5708" upper="1.5708"/>
+  </joint>
+  <!-- Joint from arm_1_3__cut_extrude2_2 to arm_2_3__cut_extrude4_2 -->
+  <joint name="back_right_femur_joint" type="revolute">
+    <origin xyz="0.0504 -0.0238 0.0111" rpy="-1.5708 0.947562 -0"/>
+    <parent link="arm_1_3__cut_extrude2_2"/>
+    <child link="arm_2_3__cut_extrude4_2"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="10" velocity="10" lower="-0.162163" upper="0.623235"/>
+  </joint>
+  <!-- Joint from base_link to arm_1_3__cut_extrude2_2 -->
+  <joint name="back_right_coxa_joint" type="revolute">
+    <origin xyz="-0.0802 0.0649 0.0363" rpy="-3.14159 0 2.17875"/>
+    <parent link="base_link"/>
+    <child link="arm_1_3__cut_extrude2_2"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="10" velocity="10" lower="-1.74824" upper="0.607954"/>
+  </joint>
+  <!-- Link arm_1_3__cut_extrude2_3 -->
+  <link name="arm_1_3__cut_extrude2_3">
+    <inertial>
+      <origin xyz="0.0417351 0.000257951 0.0215166" rpy="0 0 0"/>
+      <mass value="0.107119"/>
+      <inertia ixx="4.49729e-05" ixy="1.73628e-06" ixz="-5.86438e-07" iyy="5.62655e-05" iyz="1.24639e-06" izz="3.74424e-05"/>
+    </inertial>
+    <!-- Part servo_motor_25kg__body9_7 -->
+    <visual>
+      <origin xyz="0.0504 -0.0278 0.0111" rpy="1.5708 -1.5708 0"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/servo_motor_25kg__body9.stl"/>
+      </geometry>
+      <material name="servo_motor_25kg__body9_7_material">
+        <color rgba="0.792157 0.819608 0.933333 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.0504 -0.0278 0.0111" rpy="1.5708 -1.5708 0"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/servo_motor_25kg__body9.stl"/>
+      </geometry>
+    </collision>
+    <!-- Part aluminium_25t_servo_horn_3__body1_10 -->
+    <visual>
+      <origin xyz="0 0 -0.006" rpy="3.14159 0 -0"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/aluminium_25t_servo_horn_3__body1.stl"/>
+      </geometry>
+      <material name="aluminium_25t_servo_horn_3__body1_10_material">
+        <color rgba="0.792157 0.819608 0.933333 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 -0.006" rpy="3.14159 0 -0"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/aluminium_25t_servo_horn_3__body1.stl"/>
+      </geometry>
+    </collision>
+    <!-- Part arm_1_3__cut_extrude2_4 -->
+    <visual>
+      <origin xyz="0.04 -0.01 -0.008" rpy="-3.14159 -0 1.5708"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/arm_1_3__cut_extrude2.stl"/>
+      </geometry>
+      <material name="arm_1_3__cut_extrude2_4_material">
+        <color rgba="0.792157 0.819608 0.933333 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.04 -0.01 -0.008" rpy="-3.14159 -0 1.5708"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/arm_1_3__cut_extrude2.stl"/>
+      </geometry>
+    </collision>
+  </link>
+  <!-- Link arm_2_3__cut_extrude4_3 -->
+  <link name="arm_2_3__cut_extrude4_3">
+    <inertial>
+      <origin xyz="0.04 -3.237e-09 0.0222615" rpy="0 0 0"/>
+      <mass value="0.0596212"/>
+      <inertia ixx="3.56761e-05" ixy="6.181e-09" ixz="3.4e-11" iyy="6.3183e-05" iyz="-5e-12" izz="3.13307e-05"/>
+    </inertial>
+    <!-- Part aluminium_25t_servo_horn_3__body1_11 -->
+    <visual>
+      <origin xyz="0.08 0 -0.006" rpy="-3.14159 0 3.14159"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/aluminium_25t_servo_horn_3__body1.stl"/>
+      </geometry>
+      <material name="aluminium_25t_servo_horn_3__body1_11_material">
+        <color rgba="0.792157 0.819608 0.933333 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.08 0 -0.006" rpy="-3.14159 0 3.14159"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/aluminium_25t_servo_horn_3__body1.stl"/>
+      </geometry>
+    </collision>
+    <!-- Part arm_2_3__cut_extrude4_4 -->
+    <visual>
+      <origin xyz="-0.01 0.01 0.02415" rpy="3.14159 0 1.5708"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/arm_2_3__cut_extrude4.stl"/>
+      </geometry>
+      <material name="arm_2_3__cut_extrude4_4_material">
+        <color rgba="0.792157 0.819608 0.933333 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.01 0.01 0.02415" rpy="3.14159 0 1.5708"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/arm_2_3__cut_extrude4.stl"/>
+      </geometry>
+    </collision>
+    <!-- Part aluminium_25t_servo_horn_3__body1_12 -->
+    <visual>
+      <origin xyz="-0 0 -0.006" rpy="3.14159 -0 0"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/aluminium_25t_servo_horn_3__body1.stl"/>
+      </geometry>
+      <material name="aluminium_25t_servo_horn_3__body1_12_material">
+        <color rgba="0.792157 0.819608 0.933333 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0 0 -0.006" rpy="3.14159 -0 0"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/aluminium_25t_servo_horn_3__body1.stl"/>
+      </geometry>
+    </collision>
+  </link>
+  <!-- Link pata_con_iman__cut_extrude6_4 -->
+  <link name="pata_con_iman__cut_extrude6_4">
+    <inertial>
+      <origin xyz="0.0501679 -0.0513571 -0.0134724" rpy="0 0 0"/>
+      <mass value="0.221571"/>
+      <inertia ixx="0.000385638" ixy="0.000372413" ixz="-4.54043e-05" iyy="0.000528476" iyz="4.06227e-05" izz="0.000855183"/>
+    </inertial>
+    <!-- Part servo_motor_25kg__body9_8 -->
+    <visual>
+      <origin xyz="0 0 0.004" rpy="0 -0 -0.794586"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/servo_motor_25kg__body9.stl"/>
+      </geometry>
+      <material name="servo_motor_25kg__body9_8_material">
+        <color rgba="0.792157 0.819608 0.933333 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0.004" rpy="0 -0 -0.794586"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/servo_motor_25kg__body9.stl"/>
+      </geometry>
+    </collision>
+    <!-- Part pata_con_iman__cut_extrude6_4 -->
+    <visual>
+      <origin xyz="-0.027938 -0.000662568 0.0014" rpy="-2.34701 1.5708 0"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/pata_con_iman__cut_extrude6.stl"/>
+      </geometry>
+      <material name="pata_con_iman__cut_extrude6_4_material">
+        <color rgba="0.792157 0.819608 0.933333 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.027938 -0.000662568 0.0014" rpy="-2.34701 1.5708 0"/>
+      <geometry>
+        <mesh filename="package://quadruped_description/quadruped/assets/pata_con_iman__cut_extrude6.stl"/>
+      </geometry>
+    </collision>
+  </link>
+  <!-- Joint from arm_2_3__cut_extrude4_3 to pata_con_iman__cut_extrude6_4 -->
+  <joint name="front_right_tibia_joint" type="revolute">
+    <origin xyz="0.08 0 0" rpy="-3.14159 0 3.14159"/>
+    <parent link="arm_2_3__cut_extrude4_3"/>
+    <child link="pata_con_iman__cut_extrude6_4"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="10" velocity="10" lower="-0.774465" upper="0.00918831"/>
+  </joint>
+  <!-- Joint from arm_1_3__cut_extrude2_3 to arm_2_3__cut_extrude4_3 -->
+  <joint name="front_right_femur_joint" type="revolute">
+    <origin xyz="0.0504 -0.0238 0.0111" rpy="-1.5708 0.785398 -0"/>
+    <parent link="arm_1_3__cut_extrude2_3"/>
+    <child link="arm_2_3__cut_extrude4_3"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="10" velocity="10" lower="-0" upper="0.785398"/>
+  </joint>
+  <!-- Joint from base_link to arm_1_3__cut_extrude2_3 -->
+  <joint name="front_right_coxa_joint" type="revolute">
+    <origin xyz="-0.0802 -0.0649 0.0363" rpy="-3.14159 -0 -2.10168"/>
+    <parent link="base_link"/>
+    <child link="arm_1_3__cut_extrude2_3"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="10" velocity="10" lower="-0.53088" upper="1.99985"/>
+  </joint>
+
+  <!-- Plugin gz_ros2_control para Gazebo Harmonic -->
+  <gazebo>
+    <plugin filename="gz_ros2_control-system" name="gz_ros2_control::GazeboSimROS2ControlPlugin">
+      <parameters>$(find quadruped_description)/config/ros2_controllers.yaml</parameters>
+    </plugin>
+  </gazebo>
+
+  <!-- Interfaces de ros2_control para las 12 articulaciones -->
+  <ros2_control name="GazeboSimSystem" type="system">
+    <hardware>
+      <plugin>gz_ros2_control/GazeboSimSystem</plugin>
+    </hardware>
+
+    <!-- Front Left -->
+    <joint name="front_left_coxa_joint">
+      <command_interface name="position"/>
+      <state_interface name="position"/><state_interface name="velocity"/>
+    </joint>
+    <joint name="front_left_femur_joint">
+      <command_interface name="position"/>
+      <state_interface name="position"/><state_interface name="velocity"/>
+    </joint>
+    <joint name="front_left_tibia_joint">
+      <command_interface name="position"/>
+      <state_interface name="position"/><state_interface name="velocity"/>
+    </joint>
+
+    <!-- Front Right -->
+    <joint name="front_right_coxa_joint">
+      <command_interface name="position"/>
+      <state_interface name="position"/><state_interface name="velocity"/>
+    </joint>
+    <joint name="front_right_femur_joint">
+      <command_interface name="position"/>
+      <state_interface name="position"/><state_interface name="velocity"/>
+    </joint>
+    <joint name="front_right_tibia_joint">
+      <command_interface name="position"/>
+      <state_interface name="position"/><state_interface name="velocity"/>
+    </joint>
+
+    <!-- Back Left -->
+    <joint name="back_left_coxa_joint">
+      <command_interface name="position"/>
+      <state_interface name="position"/><state_interface name="velocity"/>
+    </joint>
+    <joint name="back_left_femur_joint">
+      <command_interface name="position"/>
+      <state_interface name="position"/><state_interface name="velocity"/>
+    </joint>
+    <joint name="back_left_tibia_joint">
+      <command_interface name="position"/>
+      <state_interface name="position"/><state_interface name="velocity"/>
+    </joint>
+
+    <!-- Back Right -->
+    <joint name="back_right_coxa_joint">
+      <command_interface name="position"/>
+      <state_interface name="position"/><state_interface name="velocity"/>
+    </joint>
+    <joint name="back_right_femur_joint">
+      <command_interface name="position"/>
+      <state_interface name="position"/><state_interface name="velocity"/>
+    </joint>
+    <joint name="back_right_tibia_joint">
+      <command_interface name="position"/>
+      <state_interface name="position"/><state_interface name="velocity"/>
+    </joint>
+  </ros2_control>
+</robot>
