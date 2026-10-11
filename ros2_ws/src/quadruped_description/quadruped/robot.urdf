@@ -250,6 +250,17 @@
       </geometry>
     </collision>
   </link>
+  <gazebo reference="base_link">
+    <sensor name="imu_sensor" type="imu">
+      <always_on>true</always_on>
+      <update_rate>100</update_rate>
+      <visualize>true</visualize>
+      <topic>imu</topic>
+      <pose>0 0 0 0 0 0</pose> <!-- Colocado en el centro del base_link -->
+      <plugin filename="gz-sim-imu-system" name="gz::sim::systems::Imu">
+      </plugin>
+    </sensor>
+  </gazebo>
   <!-- Link servo_motor_25kg__body9 -->
   <link name="servo_motor_25kg__body9">
     <inertial>
@@ -1024,4 +1035,44 @@
       <state_interface name="position"/><state_interface name="velocity"/>
     </joint>
   </ros2_control>
+  <gazebo reference="front_left_tibia">
+      <sensor name="fl_foot_contact" type="contact">
+        <always_on>true</always_on>
+        <update_rate>50.0</update_rate>
+        <contact>
+          <collision>front_left_tibia_collision</collision>
+        </contact>
+        <topic>/amtq/fl_contact</topic>
+      </sensor>
+    </gazebo>
+    <gazebo reference="front_right_tibia">
+      <sensor name="fr_foot_contact" type="contact">
+        <always_on>true</always_on>
+        <update_rate>50.0</update_rate>
+        <contact>
+          <collision>front_right_tibia_collision</collision>
+        </contact>
+        <topic>/amtq/fr_contact</topic>
+      </sensor>
+    </gazebo>
+    <gazebo reference="back_left_tibia">
+      <sensor name="bl_foot_contact" type="contact">
+        <always_on>true</always_on>
+        <update_rate>50.0</update_rate>
+        <contact>
+          <collision>back_left_tibia_collision</collision>
+        </contact>
+        <topic>/amtq/bl_contact</topic>
+      </sensor>
+    </gazebo>
+    <gazebo reference="back_right_tibia">
+      <sensor name="br_foot_contact" type="contact">
+        <always_on>true</always_on>
+        <update_rate>50.0</update_rate>
+        <contact>
+          <collision>back_right_tibia_collision</collision>
+        </contact>
+        <topic>/amtq/br_contact</topic>
+      </sensor>
+    </gazebo>
 </robot>

@@ -1,506 +1,153 @@
 #!/usr/bin/env python3
-
+import json
+import os
+import rclpy
 import numpy as np
 
-import rclpy
+from std_msgs.msg import Bool
 from rclpy.node import Node
-
 from std_msgs.msg import Float64MultiArray
-from sensor_msgs.msg import JointState
+from sensor_msgs.msg import JointState, Imu
 
 
 class AMTQGaitController(Node):
-    """
-    ================================================================
-    AMTQ V2.0
-    DAR Inverse Kinematics + Elliptical Crawling Gait
-    ================================================================
-
-    Flujo:
-
-        Tiempo
-          |
-          v
-    Gait Generator
-          |
-          v
-       X, Y, Z
-          |
-          v
-        DAR IK
-          |
-          v
-       q1, q2, q3
-          |
-          v
-    Joint Limits
-          |
-          v
-    12 Joint Commands
-          |
-          v
-    ROS 2 Controller
-    """
-
-    # ================================================================
-    # INITIALIZATION
-    # ================================================================
-
     def __init__(self):
+        super().__init__("amtq_gait_controller")
 
-        super().__init__('amtq_gait_controller')
+        # Estado de contacto de cada pata (FL, FR, BL, BR)
+        self.foot_contacts = [False, False, False, False]
+        self.z_stance_offsets = np.zeros(4)
+        self.imu_data = None
 
-        # ============================================================
-        # JOINT ORDER
-        # ============================================================
+        self.config_file = "foot_calibration.json"
+        self.load_learned_offsets()
 
-        # Orden interno:
-        #
-        # 0 = FL
-        # 1 = FR
-        # 2 = BL
-        # 3 = BR
-        #
-
-        self.leg_names = [
-            'front_left',
-            'front_right',
-            'back_left',
-            'back_right'
-        ]
-
-        # ============================================================
-        # JOINT NAMES
-        # ============================================================
-
-        self.joint_names = [
-
-            # FRONT LEFT
-            'front_left_coxa_joint',
-            'front_left_femur_joint',
-            'front_left_tibia_joint',
-
-            # FRONT RIGHT
-            'front_right_coxa_joint',
-            'front_right_femur_joint',
-            'front_right_tibia_joint',
-
-            # BACK LEFT
-            'back_left_coxa_joint',
-            'back_left_femur_joint',
-            'back_left_tibia_joint',
-
-            # BACK RIGHT
-            'back_right_coxa_joint',
-            'back_right_femur_joint',
-            'back_right_tibia_joint'
-        ]
-
-        # ============================================================
-        # PARAMETERS
-        # ============================================================
-
-        self.declare_parameter(
-            'control_frequency',
-            50.0
+        # Suscriptores de contacto
+        self.create_subscription(
+            Bool, "/amtq/fl_contact", lambda msg: self._contact_cb(0, msg), 10
+        )
+        self.create_subscription(
+            Bool, "/amtq/fr_contact", lambda msg: self._contact_cb(1, msg), 10
+        )
+        self.create_subscription(
+            Bool, "/amtq/bl_contact", lambda msg: self._contact_cb(2, msg), 10
+        )
+        self.create_subscription(
+            Bool, "/amtq/br_contact", lambda msg: self._contact_cb(3, msg), 10
         )
 
-        self.declare_parameter(
-            'step_length',
-            80.0
-        )
+        # Suscriptor de IMU
+        self.create_subscription(Imu, "/imu", self._imu_cb, 10)
 
-        self.declare_parameter(
-            'step_height',
-            40.0
-        )
+        # Configuración del robot
+        self.tibia_offsets = np.array([1.8338, 1.8338, 1.8338, 1.8338], dtype=float)
+        self.leg_names = ["front_left", "front_right", "back_left", "back_right"]
 
-        self.declare_parameter(
-            'gait_period',
-            1.0
-        )
+        # Parámetros ROS 2
+       # Parámetros ROS 2
+        self.declare_parameter("control_frequency", 50.0)
+        self.declare_parameter("step_length", 30.0)   # Antes estaba en 80.0
+        self.declare_parameter("step_height", 35.0)   # Antes estaba en 40.0[cite: 7]
+        self.declare_parameter("gait_period", 1.0)
+        self.declare_parameter("dar_iterations", 10)
+        self.declare_parameter("dar_lambda", 0.005)
+        self.declare_parameter("home_x", 80.0)        # Antes estaba en 120.0. Esto endereza la tibia al caer[cite: 7]
+        self.declare_parameter("home_y", 0.0)
+        self.declare_parameter("home_z", -170.0)
+        self.declare_parameter("home_duration", 5.0)
+        self.declare_parameter("start_gait", False)
+        self.declare_parameter("home_test_coxa_zero", True)
+        self.declare_parameter("print_debug", True)
+        self.declare_parameter("publish_joint_states", False)
 
-        self.declare_parameter(
-            'dar_iterations',
-            10
-        )
-
-        self.declare_parameter(
-            'dar_lambda',
-            0.005
-        )
-
-        self.declare_parameter(
-            'home_x',
-            120.0
-        )
-
-        self.declare_parameter(
-            'home_y',
-            0.0
-        )
-
-        self.declare_parameter(
-            'home_z',
-            -150.0
-        )
-
-        self.declare_parameter(
-            'home_duration',
-            5.0
-        )
-
-        self.declare_parameter(
-            'start_gait',
-            False
-        )
-        
-        self.declare_parameter(
-            'home_test_coxa_zero',
-            True
-        )
-
-        self.declare_parameter(
-            'print_debug',
-            True
-        )
-
-        self.declare_parameter(
-            'publish_joint_states',
-            False
-        )
-
-        # ============================================================
-        # READ PARAMETERS
-        # ============================================================
-
-        self.control_frequency = float(
-            self.get_parameter(
-                'control_frequency'
-            ).value
-        )
-
-        self.L = float(
-            self.get_parameter(
-                'step_length'
-            ).value
-        )
-
-        self.H = float(
-            self.get_parameter(
-                'step_height'
-            ).value
-        )
-
-        self.T = float(
-            self.get_parameter(
-                'gait_period'
-            ).value
-        )
-
-        self.N_DAR = int(
-            self.get_parameter(
-                'dar_iterations'
-            ).value
-        )
-
-        self.lambda_val = float(
-            self.get_parameter(
-                'dar_lambda'
-            ).value
-        )
-
-        self.x_home = float(
-            self.get_parameter(
-                'home_x'
-            ).value
-        )
-
-        self.y_home = float(
-            self.get_parameter(
-                'home_y'
-            ).value
-        )
-
-        self.z_home = float(
-            self.get_parameter(
-                'home_z'
-            ).value
-        )
-
-        self.home_duration = float(
-            self.get_parameter(
-                'home_duration'
-            ).value
-        )
-
-        self.gait_enabled = bool(
-            self.get_parameter(
-                'start_gait'
-            ).value
-        )
-        
-        self.home_test_coxa_zero = bool(
-            self.get_parameter(
-                'home_test_coxa_zero'
-            ).value
-        )
-
-        self.debug = bool(
-            self.get_parameter(
-                'print_debug'
-            ).value
-        )
-
+        # Lectura de parámetros
+        self.control_frequency = float(self.get_parameter("control_frequency").value)
+        self.L = float(self.get_parameter("step_length").value)
+        self.H = float(self.get_parameter("step_height").value)
+        self.T = float(self.get_parameter("gait_period").value)
+        self.N_DAR = int(self.get_parameter("dar_iterations").value)
+        self.lambda_val = float(self.get_parameter("dar_lambda").value)
+        self.x_home = float(self.get_parameter("home_x").value)
+        self.y_home = float(self.get_parameter("home_y").value)
+        self.z_home = float(self.get_parameter("home_z").value)
+        self.home_duration = float(self.get_parameter("home_duration").value)
+        self.gait_enabled = bool(self.get_parameter("start_gait").value)
+        self.home_test_coxa_zero = bool(self.get_parameter("home_test_coxa_zero").value)
+        self.debug = bool(self.get_parameter("print_debug").value)
         self.publish_joint_states_enabled = bool(
-            self.get_parameter(
-                'publish_joint_states'
-            ).value
+            self.get_parameter("publish_joint_states").value
         )
 
-        # ============================================================
-        # ROS PUBLISHERS
-        # ============================================================
-
+        # Publishers
         self.command_pub = self.create_publisher(
-            Float64MultiArray,
-            '/leg_position_controller/commands',
-            10
+            Float64MultiArray, "/leg_position_controller/commands", 10
         )
+        self.joint_state_pub = self.create_publisher(JointState, "/joint_states", 10)
 
-        self.joint_state_pub = self.create_publisher(
-            JointState,
-            '/joint_states',
-            10
-        )
-
-        # ============================================================
-        # TIME
-        # ============================================================
-
-        self.dt = (
-            1.0 /
-            self.control_frequency
-        )
-
-        self.t = 0.0
-
-        self.start_time = (
-            self.get_clock().now()
-        )
-
-        # ============================================================
-        # SIMSCAPE / MATLAB CALIBRATION
-        # ============================================================
-
-        # ============================================================
-        # SIMSCAPE / MATLAB CALIBRATION
-        # ============================================================
-
-        # Direcciones de eje en URDF (1.0 para lado izquierdo, -1.0 para derecho)
-        self.coxa_axis_dir = np.array(
-            [
-                 1.0,
-                -1.0,
-                 1.0,
-                -1.0
-            ],
-            dtype=float
-        )
-
-        self.S_vec = np.array(
-            [
-                 1.0,
-                -1.0,
-                 1.0,
-                -1.0
-            ],
-            dtype=float
-        )
-
-        # ============================================================
-        # TRAJECTORY SIGNS
-        # ============================================================
-
-        self.signo_y = np.array(
-            [
-                 1.0,
-                -1.0,
-                 1.0,
-                -1.0
-            ],
-            dtype=float
-        )
-
+        # Geometría del robot
+        self.L1, self.L2, self.L3 = 54.32, 80.00, 161.64
+        self.coxa_axis_dir = np.array([-1.0, -1.0, -1.0, -1.0])
+        self.S_vec = np.array([1.0, -1.0, -1.0, 1.0])
+        self.signo_y = np.array([1.0, -1.0, 1.0, -1.0])
         self.signo_z = 1.0
+        self.desfase = np.array([0.75, 0.00, 0.25, 0.50]) * self.T
 
-        # ============================================================
-        # GAIT PHASE OFFSETS
-        # ============================================================
-
-        # Original MATLAB / Simulink sequence:
-        #
-        # FL = 0.75 T
-        # FR = 0.00 T
-        # BL = 0.25 T
-        # BR = 0.50 T
-        #
-
-        self.desfase = np.array(
-
-            [
-                0.75,
-                0.00,
-                0.25,
-                0.50
-            ],
-
-            dtype=float
-
-        ) * self.T
-
-        # ============================================================
-        # LINK LENGTHS
-        # ============================================================
-
-        self.L1 = 54.32
-        self.L2 = 80.00
-        self.L3 = 161.64
-
-        # ============================================================
-        # JOINT LIMITS
-        # ============================================================
-
-        # Límites provenientes del URDF.
-
+        # Límites
         self.joint_limits = {
-            'front_left': {
-                'coxa': (-1.761120, 1.761120),
-                'femur': (-1.570800, 1.570800),
-                'tibia': (-1.570800, 1.570800)
+            "front_left": {
+                "coxa": (-1.761120, 1.761120),
+                "femur": (-2.094400, 2.094400),
+                "tibia": (-2.094400, 2.094400),
             },
-            'front_right': {
-                'coxa': (-1.999850, 1.999850),
-                'femur': (-1.570800, 1.570800),
-                'tibia': (-1.570800, 1.570800)
+            "front_right": {
+                "coxa": (-1.999850, 1.999850),
+                "femur": (-2.094400, 2.094400),
+                "tibia": (-2.094400, 2.094400),
             },
-            'back_left': {
-                'coxa': (-1.402110, 1.402110),
-                'femur': (-1.570800, 1.570800),
-                'tibia': (-1.570800, 1.570800)
+            "back_left": {
+                "coxa": (-1.402110, 1.402110),
+                "femur": (-2.094400, 2.094400),
+                "tibia": (-2.094400, 2.094400),
             },
-            'back_right': {
-                'coxa': (-1.748240, 1.748240),
-                'femur': (-1.570800, 1.570800),
-                'tibia': (-1.570800, 1.570800)
-            }
+            "back_right": {
+                "coxa": (-1.748240, 1.748240),
+                "femur": (-2.094400, 2.094400),
+                "tibia": (-2.094400, 2.094400),
+            },
         }
-        
-        # ============================================================
-        # STATE
-        # ============================================================
 
-        self.previous_command = np.zeros(
-            12,
-            dtype=float
-        )
-
+        self.previous_command = np.zeros(12, dtype=float)
         self.last_debug_time = 0.0
-        
-        self.last_raw_clamp_debug_time = 0.0
+        self.dt = 1.0 / self.control_frequency
+        self.t = 0.0
+        self.start_time = self.get_clock().now()
 
-        self.home_completed = False
+        # Timer
+        self.timer = self.create_timer(self.dt, self.control_loop)
 
-        self.last_unreachable_warning = 0.0
+    def _contact_cb(self, leg_idx, msg):
+        self.foot_contacts[leg_idx] = msg.data
 
-        # ============================================================
-        # TIMER
-        # ============================================================
+    def _imu_cb(self, msg):
+        self.imu_data = msg
 
-        self.timer = self.create_timer(
+    def load_learned_offsets(self):
+        if os.path.exists(self.config_file):
+            with open(self.config_file, "r") as f:
+                data = json.load(f)
+                self.z_stance_offsets = np.array(data.get("z_offsets", [0, 0, 0, 0]))
 
-            self.dt,
-            self.control_loop
-        )
-
-        # ============================================================
-        # START MESSAGE
-        # ============================================================
-
-        self.get_logger().info(
-            '=================================================='
-        )
-
-        self.get_logger().info(
-            'AMTQ V2.0 GAIT CONTROLLER'
-        )
-
-        self.get_logger().info(
-            'DAR + Elliptical Crawling Gait'
-        )
-
-        self.get_logger().info(
-            '=================================================='
-        )
-
-        self.get_logger().info(
-            f'Control frequency: '
-            f'{self.control_frequency:.2f} Hz'
-        )
-
-        self.get_logger().info(
-            f'Step length: '
-            f'{self.L:.2f} mm'
-        )
-
-        self.get_logger().info(
-            f'Step height: '
-            f'{self.H:.2f} mm'
-        )
-
-        self.get_logger().info(
-            f'Gait period: '
-            f'{self.T:.2f} s'
-        )
-
-        self.get_logger().info(
-            f'DAR iterations: '
-            f'{self.N_DAR}'
-        )
-
-        self.get_logger().info(
-            f'DAR lambda: '
-            f'{self.lambda_val}'
-        )
-
-        self.get_logger().info(
-            f'Gait enabled: '
-            f'{self.gait_enabled}'
-        )
-
-        self.get_logger().info(
-            'Internal leg order: '
-            'FL -> FR -> BL -> BR'
-        )
-
-        self.get_logger().info(
-            'Waiting for HOME phase...'
-        )
+    def save_learned_offsets(self):
+        with open(self.config_file, "w") as f:
+            json.dump({"z_offsets": self.z_stance_offsets.tolist()}, f)
 
     # ================================================================
     # DAR SPIN
     # ================================================================
 
-    def dar_spin(
-        self,
-        r_ab,
-        r_ac,
-        axis
-    ):
+    def dar_spin(self, r_ab, r_ac, axis):
 
-        eps_machine = np.finfo(
-            float
-        ).eps
+        eps_machine = np.finfo(float).eps
 
         xab = r_ab[0]
         yab = r_ab[1]
@@ -512,56 +159,25 @@ class AMTQGaitController(Node):
 
         axis = axis.lower()
 
-        if axis == 'x':
+        if axis == "x":
 
-            value = (
+            value = eps_machine + yab * zac - yac * zab
 
-                eps_machine
-                +
-                yab * zac
-                -
-                yac * zab
-            )
+        elif axis == "y":
 
-        elif axis == 'y':
+            value = eps_machine - xab * zac + xac * zab
 
-            value = (
+        elif axis == "z":
 
-                eps_machine
-                -
-                xab * zac
-                +
-                xac * zab
-            )
-
-        elif axis == 'z':
-
-            value = (
-
-                eps_machine
-                +
-                xab * yac
-                -
-                xac * yab
-            )
+            value = eps_machine + xab * yac - xac * yab
 
         else:
 
-            raise ValueError(
-
-                f'Invalid axis: {axis}'
-            )
+            raise ValueError(f"Invalid axis: {axis}")
 
         BIG = 1e8
 
-        d = np.tanh(
-
-            0.5
-            *
-            BIG
-            *
-            value
-        )
+        d = np.tanh(0.5 * BIG * value)
 
         return d
 
@@ -569,13 +185,7 @@ class AMTQGaitController(Node):
     # DAR ANGLE
     # ================================================================
 
-    def dar_angle(
-        self,
-        r_ab,
-        r_ac,
-        axis,
-        method=3
-    ):
+    def dar_angle(self, r_ab, r_ac, axis, method=3):
 
         axis = axis.lower()
 
@@ -583,72 +193,27 @@ class AMTQGaitController(Node):
         # ELIMINATION VECTOR
         # ------------------------------------------------------------
 
-        if axis == 'x':
+        if axis == "x":
 
-            E = np.array(
+            E = np.array([0.0, 1.0, 1.0])
 
-                [
-                    0.0,
-                    1.0,
-                    1.0
-                ]
-            )
+            axis_vector = np.array([1.0, 0.0, 0.0])
 
-            axis_vector = np.array(
+        elif axis == "y":
 
-                [
-                    1.0,
-                    0.0,
-                    0.0
-                ]
-            )
+            E = np.array([1.0, 0.0, 1.0])
 
-        elif axis == 'y':
+            axis_vector = np.array([0.0, 1.0, 0.0])
 
-            E = np.array(
+        elif axis == "z":
 
-                [
-                    1.0,
-                    0.0,
-                    1.0
-                ]
-            )
+            E = np.array([1.0, 1.0, 0.0])
 
-            axis_vector = np.array(
-
-                [
-                    0.0,
-                    1.0,
-                    0.0
-                ]
-            )
-
-        elif axis == 'z':
-
-            E = np.array(
-
-                [
-                    1.0,
-                    1.0,
-                    0.0
-                ]
-            )
-
-            axis_vector = np.array(
-
-                [
-                    0.0,
-                    0.0,
-                    1.0
-                ]
-            )
+            axis_vector = np.array([0.0, 0.0, 1.0])
 
         else:
 
-            raise ValueError(
-
-                f'Invalid axis: {axis}'
-            )
+            raise ValueError(f"Invalid axis: {axis}")
 
         # ------------------------------------------------------------
         # HADAMARD PRODUCT
@@ -657,26 +222,11 @@ class AMTQGaitController(Node):
         v1 = E * r_ab
         v2 = E * r_ac
 
-        norm_v1 = np.linalg.norm(
-            v1
-        )
+        norm_v1 = np.linalg.norm(v1)
 
-        norm_v2 = np.linalg.norm(
-            v2
-        )
+        norm_v2 = np.linalg.norm(v2)
 
-        if (
-
-            norm_v1
-            <
-            np.finfo(float).eps
-
-            or
-
-            norm_v2
-            <
-            np.finfo(float).eps
-        ):
+        if norm_v1 < np.finfo(float).eps or norm_v2 < np.finfo(float).eps:
 
             return 0.0
 
@@ -691,32 +241,17 @@ class AMTQGaitController(Node):
         # DOT PRODUCT
         # ------------------------------------------------------------
 
-        dot_product = np.dot(
-            v1,
-            v2
-        )
+        dot_product = np.dot(v1, v2)
 
-        dot_product = np.clip(
-
-            dot_product,
-            -1.0,
-             1.0
-        )
+        dot_product = np.clip(dot_product, -1.0, 1.0)
 
         # ------------------------------------------------------------
         # CROSS PRODUCT
         # ------------------------------------------------------------
 
-        cross_product = np.cross(
-            v1,
-            v2
-        )
+        cross_product = np.cross(v1, v2)
 
-        cross_projection = np.dot(
-
-            cross_product,
-            axis_vector
-        )
+        cross_projection = np.dot(cross_product, axis_vector)
 
         # ------------------------------------------------------------
         # DAR EQUATION
@@ -724,28 +259,17 @@ class AMTQGaitController(Node):
 
         if method == 1:
 
-            theta = np.arccos(
-            dot_product
-        )
+            theta = np.arccos(dot_product)
 
         elif method == 2:
 
-            value = np.clip(
-                cross_projection,
-                -1.0,
-                1.0
-            )
+            value = np.clip(cross_projection, -1.0, 1.0)
 
-            theta = np.arcsin(
-                value
-            )
+            theta = np.arcsin(value)
 
         else:
 
-            theta = np.arctan2(
-                cross_projection,
-                dot_product
-            )
+            theta = np.arctan2(cross_projection, dot_product)
 
             return theta
 
@@ -753,58 +277,25 @@ class AMTQGaitController(Node):
     # VALIDATE WORKSPACE
     # ================================================================
 
-    def is_target_reachable(
-        self,
-        D
-    ):
+    def is_target_reachable(self, D):
 
-        minimum_distance = abs(
-            self.L2
-            -
-            self.L3
-        )
+        minimum_distance = abs(self.L2 - self.L3)
 
-        maximum_distance = (
+        maximum_distance = self.L2 + self.L3
 
-            self.L2
-            +
-            self.L3
-        )
-
-        return (
-
-            minimum_distance
-            <=
-            D
-            <=
-            maximum_distance
-        )
+        return minimum_distance <= D <= maximum_distance
 
     # ================================================================
     # DAR INVERSE KINEMATICS
     # ================================================================
 
-    def calculate_dar_ik(
-        self,
-        x,
-        y,
-        z
-    ):
+    def calculate_dar_ik(self, x, y, z):
 
-        q1 = np.zeros(
-            4,
-            dtype=float
-        )
+        q1 = np.zeros(4, dtype=float)
 
-        q2 = np.zeros(
-            4,
-            dtype=float
-        )
+        q2 = np.zeros(4, dtype=float)
 
-        q3 = np.zeros(
-            4,
-            dtype=float
-        )
+        q3 = np.zeros(4, dtype=float)
 
         for i in range(4):
 
@@ -812,37 +303,17 @@ class AMTQGaitController(Node):
             # TARGET
             # --------------------------------------------------------
 
-            r = np.array(
-
-                [
-                    x[i],
-                    y[i],
-                    z[i]
-                ],
-
-                dtype=float
-            )
+            r = np.array([x[i], y[i], z[i]], dtype=float)
 
             # --------------------------------------------------------
             # HORIZONTAL PROJECTION
             # --------------------------------------------------------
 
-            r_xy = np.linalg.norm(
-                r[0:2]
-            )
+            r_xy = np.linalg.norm(r[0:2])
 
-            R = (
+            R = r_xy - self.L1
 
-                r_xy
-                -
-                self.L1
-            )
-
-            D = np.hypot(
-
-                R,
-                r[2]
-            )
+            D = np.hypot(R, r[2])
 
             # --------------------------------------------------------
             # NUMERICAL PROTECTION
@@ -850,23 +321,13 @@ class AMTQGaitController(Node):
 
             if D < 1e-9:
 
-                self.get_logger().warning(
+                self.get_logger().warning(f"Leg {i}: " "Singular IK target detected.")
 
-                    f'Leg {i}: '
-                    'Singular IK target detected.'
-                )
+                q1[i] = self.previous_command[i * 3]
 
-                q1[i] = self.previous_command[
-                    i * 3
-                ]
+                q2[i] = self.previous_command[i * 3 + 1]
 
-                q2[i] = self.previous_command[
-                    i * 3 + 1
-                ]
-
-                q3[i] = self.previous_command[
-                    i * 3 + 2
-                ]
+                q3[i] = self.previous_command[i * 3 + 2]
 
                 continue
 
@@ -874,17 +335,12 @@ class AMTQGaitController(Node):
             # WORKSPACE VALIDATION
             # --------------------------------------------------------
 
-            reachable = self.is_target_reachable(
-                D
-            )
+            reachable = self.is_target_reachable(D)
 
             if not reachable:
 
                 self.get_logger().warning(
-
-                    f'Leg {i}: '
-                    f'Target outside workspace. '
-                    f'D={D:.3f}'
+                    f"Leg {i}: " f"Target outside workspace. " f"D={D:.3f}"
                 )
 
             # ========================================================
@@ -897,125 +353,43 @@ class AMTQGaitController(Node):
 
             else:
 
-                q1_geo = np.arctan2(
-
-                    r[1],
-                    r[0]
-                )
+                q1_geo = np.arctan2(r[1], r[0])
 
             q1_dar = q1_geo
 
             coxa_current = np.array(
-
-                [
-                    self.L1
-                    *
-                    np.cos(q1_dar),
-
-                    self.L1
-                    *
-                    np.sin(q1_dar),
-
-                    0.0
-                ]
+                [self.L1 * np.cos(q1_dar), self.L1 * np.sin(q1_dar), 0.0]
             )
 
-            coxa_target = np.array(
-
-                [
-                    r[0],
-                    r[1],
-                    0.0
-                ]
-            )
+            coxa_target = np.array([r[0], r[1], 0.0])
 
             # --------------------------------------------------------
             # DAR COXA
             # --------------------------------------------------------
 
-            for _ in range(
-                self.N_DAR
-            ):
+            for _ in range(self.N_DAR):
 
-                dq1 = self.dar_angle(
+                dq1 = self.dar_angle(coxa_current, coxa_target, "z", 3)
 
-                    coxa_current,
-                    coxa_target,
-                    'z',
-                    3
-                )
-
-                q1_dar += (
-
-                    self.lambda_val
-                    *
-                    dq1
-                )
+                q1_dar += self.lambda_val * dq1
 
                 coxa_current = np.array(
-
-                    [
-                        self.L1
-                        *
-                        np.cos(q1_dar),
-
-                        self.L1
-                        *
-                        np.sin(q1_dar),
-
-                        0.0
-                    ]
+                    [self.L1 * np.cos(q1_dar), self.L1 * np.sin(q1_dar), 0.0]
                 )
 
             # ========================================================
             # FEMUR
             # ========================================================
 
-            alpha_raw = (
+            alpha_raw = (self.L2**2 + D**2 - self.L3**2) / (2.0 * self.L2 * D)
 
-                self.L2 ** 2
-                +
-                D ** 2
-                -
-                self.L3 ** 2
+            alpha = np.clip(alpha_raw, -1.0, 1.0)
 
-            ) / (
+            gamma = np.arctan2(r[2], R)
 
-                2.0
-                *
-                self.L2
-                *
-                D
-            )
+            q2_geo = gamma + np.arccos(alpha)
 
-            alpha = np.clip(
-
-                alpha_raw,
-                -1.0,
-                 1.0
-            )
-
-            gamma = np.arctan2(
-
-                r[2],
-                R
-            )
-
-            q2_geo = (
-
-                gamma
-                +
-                np.arccos(alpha)
-            )
-
-            target_femur = np.array(
-
-                [
-                    R,
-                    0.0,
-                    r[2]
-                ]
-            )
+            target_femur = np.array([R, 0.0, r[2]])
 
             q2_dar = q2_geo
 
@@ -1023,121 +397,39 @@ class AMTQGaitController(Node):
             # DAR FEMUR
             # --------------------------------------------------------
 
-            for _ in range(
-                self.N_DAR
-            ):
+            for _ in range(self.N_DAR):
 
                 knee_iter = np.array(
-
-                    [
-                        self.L2
-                        *
-                        np.cos(q2_dar),
-
-                        0.0,
-
-                        self.L2
-                        *
-                        np.sin(q2_dar)
-                    ]
+                    [self.L2 * np.cos(q2_dar), 0.0, self.L2 * np.sin(q2_dar)]
                 )
 
-                dq2 = self.dar_angle(
+                dq2 = self.dar_angle(knee_iter, target_femur, "y", 3)
 
-                    knee_iter,
-                    target_femur,
-                    'y',
-                    3
-                )
-
-                q2_dar -= (
-
-                    self.lambda_val
-                    *
-                    dq2
-                )
+                q2_dar -= self.lambda_val * dq2
 
             # ========================================================
             # TIBIA
             # ========================================================
 
-            beta_raw = (
+            beta_raw = (self.L2**2 + self.L3**2 - D**2) / (2.0 * self.L2 * self.L3)
 
-                self.L2 ** 2
-                +
-                self.L3 ** 2
-                -
-                D ** 2
+            beta = np.clip(beta_raw, -1.0, 1.0)
 
-            ) / (
-
-                2.0
-                *
-                self.L2
-                *
-                self.L3
-            )
-
-            beta = np.clip(
-
-                beta_raw,
-                -1.0,
-                 1.0
-            )
-
-            q3_geo = (
-
-                np.pi
-                -
-                np.arccos(beta)
-            )
+            q3_geo = np.pi - np.arccos(beta)
 
             knee_position = np.array(
-
-                [
-                    self.L2
-                    *
-                    np.cos(q2_dar),
-
-                    0.0,
-
-                    self.L2
-                    *
-                    np.sin(q2_dar)
-                ]
+                [self.L2 * np.cos(q2_dar), 0.0, self.L2 * np.sin(q2_dar)]
             )
 
-            target_tibia = (
-
-                target_femur
-                -
-                knee_position
-            )
+            target_tibia = target_femur - knee_position
 
             q3_dar = q3_geo
 
             tibia_current = np.array(
-
                 [
-                    self.L3
-                    *
-                    np.cos(
-
-                        q2_dar
-                        -
-                        q3_dar
-                    ),
-
+                    self.L3 * np.cos(q2_dar - q3_dar),
                     0.0,
-
-                    self.L3
-                    *
-                    np.sin(
-
-                        q2_dar
-                        -
-                        q3_dar
-                    )
+                    self.L3 * np.sin(q2_dar - q3_dar),
                 ]
             )
 
@@ -1145,47 +437,17 @@ class AMTQGaitController(Node):
             # DAR TIBIA
             # --------------------------------------------------------
 
-            for _ in range(
-                self.N_DAR
-            ):
+            for _ in range(self.N_DAR):
 
-                dq3 = self.dar_angle(
+                dq3 = self.dar_angle(tibia_current, target_tibia, "y", 3)
 
-                    tibia_current,
-                    target_tibia,
-                    'y',
-                    3
-                )
-
-                q3_dar -= (
-
-                    self.lambda_val
-                    *
-                    dq3
-                )
+                q3_dar -= self.lambda_val * dq3
 
                 tibia_current = np.array(
-
                     [
-                        self.L3
-                        *
-                        np.cos(
-
-                            q2_dar
-                            -
-                            q3_dar
-                        ),
-
+                        self.L3 * np.cos(q2_dar - q3_dar),
                         0.0,
-
-                        self.L3
-                        *
-                        np.sin(
-
-                            q2_dar
-                            -
-                            q3_dar
-                        )
+                        self.L3 * np.sin(q2_dar - q3_dar),
                     ]
                 )
 
@@ -1193,23 +455,11 @@ class AMTQGaitController(Node):
             # NORMALIZE ANGLES
             # ========================================================
 
-            q1_out = np.arctan2(
+            q1_out = np.arctan2(np.sin(q1_dar), np.cos(q1_dar))
 
-                np.sin(q1_dar),
-                np.cos(q1_dar)
-            )
+            q2_out = np.arctan2(np.sin(q2_dar), np.cos(q2_dar))
 
-            q2_out = np.arctan2(
-
-                np.sin(q2_dar),
-                np.cos(q2_dar)
-            )
-
-            q3_out = np.arctan2(
-
-                np.sin(q3_dar),
-                np.cos(q3_dar)
-            )
+            q3_out = np.arctan2(np.sin(q3_dar), np.cos(q3_dar))
 
             # ========================================================
             # OFFSETS
@@ -1221,25 +471,11 @@ class AMTQGaitController(Node):
 
             else:
 
-                q1[i] = (
-                    (q1_out * self.coxa_axis_dir[i])
-                    -
-                    self.S_vec[i] * 0.4636
-                )
+                q1[i] = (q1_out * self.coxa_axis_dir[i]) - self.S_vec[i] * 0.4636
 
-            q2[i] = (
+            q2[i] = q2_out - 0.1273
 
-                q2_out
-                -
-                0.1273
-            )
-
-            q3[i] = (
-
-                q3_out
-                -
-                1.8338
-            )
+            q3[i] = q3_out - self.tibia_offsets[i]
 
         return q1, q2, q3
 
@@ -1247,45 +483,23 @@ class AMTQGaitController(Node):
     # ELLIPTICAL GAIT GENERATOR
     # ================================================================
 
-    def generate_trajectory(
-        self,
-        t
-    ):
+    def generate_trajectory(self, t):
 
-        x = np.zeros(
-            4,
-            dtype=float
-        )
+        x = np.zeros(4, dtype=float)
 
-        y = np.zeros(
-            4,
-            dtype=float
-        )
+        y = np.zeros(4, dtype=float)
 
-        z = np.zeros(
-            4,
-            dtype=float
-        )
+        z = np.zeros(4, dtype=float)
+
+        phases = []
 
         # ------------------------------------------------------------
         # GAIT TIMING
         # ------------------------------------------------------------
 
-        T_swing = (
+        T_swing = self.T / 4.0
 
-            self.T
-            /
-            4.0
-        )
-
-        T_stance = (
-
-            3.0
-            *
-            self.T
-            /
-            4.0
-        )
+        T_stance = 3.0 * self.T / 4.0
 
         for i in range(4):
 
@@ -1293,19 +507,9 @@ class AMTQGaitController(Node):
             # LOCAL CLOCK
             # --------------------------------------------------------
 
-            t_effective = (
+            t_effective = t + self.desfase[i]
 
-                t
-                +
-                self.desfase[i]
-            )
-
-            t_cycle = (
-
-                t_effective
-                %
-                self.T
-            )
+            t_cycle = t_effective % self.T
 
             # ========================================================
             # SWING
@@ -1313,50 +517,18 @@ class AMTQGaitController(Node):
 
             if t_cycle < T_swing:
 
-                phi = (
+                phases.append("SWING")
 
-                    np.pi
-                    *
-                    t_cycle
-                    /
-                    T_swing
-                )
+                phi = np.pi * t_cycle / T_swing
 
-                paso = (
+                paso = (self.L / 2.0) * (1.0 - np.cos(phi)) - (self.L / 2.0)
 
-                    (
-                        self.L
-                        /
-                        2.0
-                    )
-
-                    *
-                    (
-                        1.0
-                        -
-                        np.cos(phi)
-                    )
-
-                    -
-                    (
-                        self.L
-                        /
-                        2.0
-                    )
-                )
-                
                 if self.debug:
                     self.get_logger().info(
-                        f'{self.leg_names[i]} | '
-                        f'SWING | paso={paso:.2f}'
+                        f"{self.leg_names[i]} | " f"SWING | paso={paso:.2f}"
                     )
 
-                z_offset = (
-
-                    self.H
-                    *
-                    np.sin(phi)
-                )
+                z_offset = self.H * np.sin(phi)
 
             # ========================================================
             # STANCE
@@ -1364,39 +536,17 @@ class AMTQGaitController(Node):
 
             else:
 
-                t_stance_local = (
+                phases.append("STANCE")
 
-                    t_cycle
-                    -
-                    T_swing
-                )
+                t_stance_local = t_cycle - T_swing
 
-                progress_stance = (
+                progress_stance = t_stance_local / T_stance
 
-                    t_stance_local
-                    /
-                    T_stance
-                )
+                paso = self.L / 2.0 - (self.L * progress_stance)
 
-                paso = (
-
-                    self.L
-                    /
-                    2.0
-
-                    -
-
-                    (
-                        self.L
-                        *
-                        progress_stance
-                    )
-                )
-                
                 if self.debug:
                     self.get_logger().info(
-                        f'{self.leg_names[i]} | '
-                        f'STANCE | paso={paso:.2f}'
+                        f"{self.leg_names[i]} | " f"STANCE | paso={paso:.2f}"
                     )
 
                 z_offset = 0.0
@@ -1405,118 +555,68 @@ class AMTQGaitController(Node):
             # XYZ
             # ========================================================
 
-            x[i] = (
+            direction_x = -1.0 if i in [0, 1] else 1.0
 
-                self.x_home
-                +
-                paso
-                *
-                0.707
-            )
+            x[i] = self.x_home + (paso * direction_x) * 0.707
 
-            y[i] = (
+            y[i] = self.y_home + paso * 0.707 * self.signo_y[i]
 
-                self.y_home
-                +
-                paso
-                *
-                0.707
-                *
-                self.signo_y[i]
-            )
+            z[i] = self.z_home + z_offset * self.signo_z
 
-            z[i] = (
-
-                self.z_home
-                +
-                z_offset
-                *
-                self.signo_z
-            )
-
-        return x, y, z
+        return x, y, z, phases
 
     # ================================================================
     # JOINT LIMITS
     # ================================================================
 
     def clamp_joint_commands(self, q1, q2, q3):
-            """Aplica los límites independientes de cada articulación según su pata."""
-            leg_keys = ['front_left', 'front_right', 'back_left', 'back_right']
-            q1_clamped = np.zeros(4)
-            q2_clamped = np.zeros(4)
-            q3_clamped = np.zeros(4)
-    
-            for i, leg in enumerate(leg_keys):
-                lim = self.joint_limits[leg]
-                q1_clamped[i] = np.clip(q1[i], lim['coxa'][0], lim['coxa'][1])
-                q2_clamped[i] = np.clip(q2[i], lim['femur'][0], lim['femur'][1])
-                q3_clamped[i] = np.clip(q3[i], lim['tibia'][0], lim['tibia'][1])
-    
-            return q1_clamped, q2_clamped, q3_clamped
+        """Aplica los límites independientes de cada articulación según su pata."""
+        leg_keys = ["front_left", "front_right", "back_left", "back_right"]
+        q1_clamped = np.zeros(4)
+        q2_clamped = np.zeros(4)
+        q3_clamped = np.zeros(4)
+
+        for i, leg in enumerate(leg_keys):
+            lim = self.joint_limits[leg]
+            q1_clamped[i] = np.clip(q1[i], lim["coxa"][0], lim["coxa"][1])
+            q2_clamped[i] = np.clip(q2[i], lim["femur"][0], lim["femur"][1])
+            q3_clamped[i] = np.clip(q3[i], lim["tibia"][0], lim["tibia"][1])
+
+        return q1_clamped, q2_clamped, q3_clamped
 
     # ================================================================
     # BUILD COMMAND
     # ================================================================
 
-    def build_command(
-        self,
-        q1,
-        q2,
-        q3
-    ):
+    def build_command(self, q1, q2, q3):
 
         command = []
 
         for i in range(4):
 
-            command.extend(
+            command.extend([float(q1[i]), float(q2[i]), float(q3[i])])
 
-                [
-
-                    float(q1[i]),
-                    float(q2[i]),
-                    float(q3[i])
-                ]
-            )
-
-        return np.array(
-
-            command,
-            dtype=float
-        )
+        return np.array(command, dtype=float)
 
     # ================================================================
     # PUBLISH COMMAND
     # ================================================================
 
-    def publish_command(
-        self,
-        command
-    ):
+    def publish_command(self, command):
 
         msg = Float64MultiArray()
 
         msg.data = command.tolist()
 
-        self.command_pub.publish(
-            msg
-        )
+        self.command_pub.publish(msg)
 
-        self.previous_command = np.copy(
-            command
-        )
+        self.previous_command = np.copy(command)
 
     # ================================================================
     # PUBLISH JOINT STATES
     # ================================================================
 
-    def publish_joint_states(
-        self,
-        q1,
-        q2,
-        q3
-    ):
+    def publish_joint_states(self, q1, q2, q3):
 
         if not self.publish_joint_states_enabled:
 
@@ -1524,12 +624,7 @@ class AMTQGaitController(Node):
 
         msg = JointState()
 
-        msg.header.stamp = (
-
-            self.get_clock()
-            .now()
-            .to_msg()
-        )
+        msg.header.stamp = self.get_clock().now().to_msg()
 
         msg.name = self.joint_names
 
@@ -1537,185 +632,120 @@ class AMTQGaitController(Node):
 
         for i in range(4):
 
-            positions.extend(
-
-                [
-
-                    float(q1[i]),
-                    float(q2[i]),
-                    float(q3[i])
-                ]
-            )
+            positions.extend([float(q1[i]), float(q2[i]), float(q3[i])])
 
         msg.position = positions
 
-        self.joint_state_pub.publish(
-            msg
-        )
+        self.joint_state_pub.publish(msg)
 
     # ================================================================
     # RAW / CLAMP DEBUG
     # ================================================================
 
-    def print_raw_clamp_debug(
-        self,
-        q1_raw,
-        q2_raw,
-        q3_raw,
-        q1,
-        q2,
-        q3
-    ):
+    def print_raw_clamp_debug(self, q1_raw, q2_raw, q3_raw, q1, q2, q3):
 
         if not self.debug:
             return
 
         self.get_logger().info(
-            f'\n'
-            f'=========== RAW vs CLAMP ===========\n'
-
-            f'FL RAW   = '
-            f'({q1_raw[0]:.4f}, '
-            f'{q2_raw[0]:.4f}, '
-            f'{q3_raw[0]:.4f})\n'
-
-            f'FL CLAMP = '
-            f'({q1[0]:.4f}, '
-            f'{q2[0]:.4f}, '
-            f'{q3[0]:.4f})\n'
-
-            f'\n'
-
-            f'FR RAW   = '
-            f'({q1_raw[1]:.4f}, '
-            f'{q2_raw[1]:.4f}, '
-            f'{q3_raw[1]:.4f})\n'
-
-            f'FR CLAMP = '
-            f'({q1[1]:.4f}, '
-            f'{q2[1]:.4f}, '
-            f'{q3[1]:.4f})\n'
-
-            f'\n'
-
-            f'BL RAW   = '
-            f'({q1_raw[2]:.4f}, '
-            f'{q2_raw[2]:.4f}, '
-            f'{q3_raw[2]:.4f})\n'
-
-            f'BL CLAMP = '
-            f'({q1[2]:.4f}, '
-            f'{q2[2]:.4f}, '
-            f'{q3[2]:.4f})\n'
-
-            f'\n'
-
-            f'BR RAW   = '
-            f'({q1_raw[3]:.4f}, '
-            f'{q2_raw[3]:.4f}, '
-            f'{q3_raw[3]:.4f})\n'
-
-            f'BR CLAMP = '
-            f'({q1[3]:.4f}, '
-            f'{q2[3]:.4f}, '
-            f'{q3[3]:.4f})\n'
-
-            f'===================================='
+            f"\n"
+            f"=========== RAW vs CLAMP ===========\n"
+            f"FL RAW   = "
+            f"({q1_raw[0]:.4f}, "
+            f"{q2_raw[0]:.4f}, "
+            f"{q3_raw[0]:.4f})\n"
+            f"FL CLAMP = "
+            f"({q1[0]:.4f}, "
+            f"{q2[0]:.4f}, "
+            f"{q3[0]:.4f})\n"
+            f"\n"
+            f"FR RAW   = "
+            f"({q1_raw[1]:.4f}, "
+            f"{q2_raw[1]:.4f}, "
+            f"{q3_raw[1]:.4f})\n"
+            f"FR CLAMP = "
+            f"({q1[1]:.4f}, "
+            f"{q2[1]:.4f}, "
+            f"{q3[1]:.4f})\n"
+            f"\n"
+            f"BL RAW   = "
+            f"({q1_raw[2]:.4f}, "
+            f"{q2_raw[2]:.4f}, "
+            f"{q3_raw[2]:.4f})\n"
+            f"BL CLAMP = "
+            f"({q1[2]:.4f}, "
+            f"{q2[2]:.4f}, "
+            f"{q3[2]:.4f})\n"
+            f"\n"
+            f"BR RAW   = "
+            f"({q1_raw[3]:.4f}, "
+            f"{q2_raw[3]:.4f}, "
+            f"{q3_raw[3]:.4f})\n"
+            f"BR CLAMP = "
+            f"({q1[3]:.4f}, "
+            f"{q2[3]:.4f}, "
+            f"{q3[3]:.4f})\n"
+            f"===================================="
         )
 
     # ================================================================
     # DEBUG
     # ================================================================
 
-    def print_debug_data(
-        self,
-        x,
-        y,
-        z,
-        q1,
-        q2,
-        q3
-    ):
+    def print_debug_data(self, x, y, z, q1, q2, q3):
 
         if not self.debug:
 
             return
 
-        if (
-
-            self.t
-            -
-            self.last_debug_time
-            <
-            1.0
-        ):
+        if self.t - self.last_debug_time < 1.0:
 
             return
 
         self.last_debug_time = self.t
 
         self.get_logger().info(
-
-            f'\n'
-
-            f'================ DEBUG ================\n'
-
-            f't = {self.t:.3f} s\n'
-
-            f'\n'
-
-            f'FL XYZ = '
-            f'({x[0]:.2f}, '
-            f'{y[0]:.2f}, '
-            f'{z[0]:.2f})\n'
-
-            f'FL Q = '
-            f'({q1[0]:.4f}, '
-            f'{q2[0]:.4f}, '
-            f'{q3[0]:.4f})\n'
-
-            f'\n'
-
-            f'FR XYZ = '
-            f'({x[1]:.2f}, '
-            f'{y[1]:.2f}, '
-            f'{z[1]:.2f})\n'
-
-            f'FR Q = '
-            f'({q1[1]:.4f}, '
-            f'{q2[1]:.4f}, '
-            f'{q3[1]:.4f})\n'
-
-            f'\n'
-
-            f'BL XYZ = '
-            f'({x[2]:.2f}, '
-            f'{y[2]:.2f}, '
-            f'{z[2]:.2f})\n'
-
-            f'BL Q = '
-            f'({q1[2]:.4f}, '
-            f'{q2[2]:.4f}, '
-            f'{q3[2]:.4f})\n'
-
-            f'\n'
-
-            f'BR XYZ = '
-            f'({x[3]:.2f}, '
-            f'{y[3]:.2f}, '
-            f'{z[3]:.2f})\n'
-
-            f'BR Q = '
-            f'({q1[3]:.4f}, '
-            f'{q2[3]:.4f}, '
-            f'{q3[3]:.4f})\n'
-
-            f'======================================'
+            f"\n"
+            f"================ DEBUG ================\n"
+            f"t = {self.t:.3f} s\n"
+            f"\n"
+            f"FL XYZ = "
+            f"({x[0]:.2f}, "
+            f"{y[0]:.2f}, "
+            f"{z[0]:.2f})\n"
+            f"FL Q = "
+            f"({q1[0]:.4f}, "
+            f"{q2[0]:.4f}, "
+            f"{q3[0]:.4f})\n"
+            f"\n"
+            f"FR XYZ = "
+            f"({x[1]:.2f}, "
+            f"{y[1]:.2f}, "
+            f"{z[1]:.2f})\n"
+            f"FR Q = "
+            f"({q1[1]:.4f}, "
+            f"{q2[1]:.4f}, "
+            f"{q3[1]:.4f})\n"
+            f"\n"
+            f"BL XYZ = "
+            f"({x[2]:.2f}, "
+            f"{y[2]:.2f}, "
+            f"{z[2]:.2f})\n"
+            f"BL Q = "
+            f"({q1[2]:.4f}, "
+            f"{q2[2]:.4f}, "
+            f"{q3[2]:.4f})\n"
+            f"\n"
+            f"BR XYZ = "
+            f"({x[3]:.2f}, "
+            f"{y[3]:.2f}, "
+            f"{z[3]:.2f})\n"
+            f"BR Q = "
+            f"({q1[3]:.4f}, "
+            f"{q2[3]:.4f}, "
+            f"{q3[3]:.4f})\n"
+            f"======================================"
         )
-
-    # ================================================================
-    # CONTROL LOOP
-    # ================================================================
 
     def control_loop(self):
 
@@ -1723,81 +753,50 @@ class AMTQGaitController(Node):
         # CURRENT TIME
         # ------------------------------------------------------------
 
-        elapsed = (
+        elapsed = (self.get_clock().now() - self.start_time).nanoseconds * 1e-9
 
-            self.get_clock().now()
-            -
-            self.start_time
-
-        ).nanoseconds * 1e-9
+       # ============================================================
+        # STATE MACHINE UPDATE
+        # ============================================================
+        if not self.gait_enabled and elapsed >= self.home_duration:
+            self.gait_enabled = True
+            self.home_completed = True
+            self.t = 0.0
+            self.get_logger().info('HOME completed. Starting gait...')
 
         # ============================================================
-        # PHASE 1: HOME
+        # TRAJECTORY GENERATION (HOME OR GAIT)
         # ============================================================
-
         if not self.gait_enabled:
-
-            x = np.full(
-
-                4,
-                self.x_home
-            )
-
-            y = np.full(
-
-                4,
-                self.y_home
-            )
-
-            z = np.full(
-
-                4,
-                self.z_home
-            )
-
-            # --------------------------------------------------------
-            # TRANSITION TO GAIT
-            # --------------------------------------------------------
-
-            if (
-
-                elapsed
-                >=
-                self.home_duration
-            ):
-
-                self.gait_enabled = True
-
-                self.home_completed = True
-
-                self.t = 0.0
-
-                self.get_logger().info(
-
-                    'HOME completed. '
-                    'Starting gait...'
-                )
-
-        # ============================================================
-        # PHASE 2: GAIT
-        # ============================================================
-
+            # Fase 1: HOME
+            x = np.full(4, self.x_home)
+            y = np.full(4, self.y_home)
+            z = np.full(4, self.z_home)
+            phases = ['STANCE', 'STANCE', 'STANCE', 'STANCE']
         else:
+            # Fase 2: GAIT
+            x, y, z, phases = self.generate_trajectory(self.t)
 
-            x, y, z = self.generate_trajectory(
-                self.t
-            )
+            # Límite de seguridad para evitar que la pata se hunda infinitamente
+            max_hundimiento = -20.0  
+
+            # Aplicar aprendizaje y extensión si no hay contacto
+            for i in range(4):
+                if phases[i] == 'STANCE' and not self.foot_contacts[i]:
+                    self.z_stance_offsets[i] -= 0.003  # Aprende en memoria
+                    
+                    # Si la memoria supera el límite, la estancamos en el máximo permitido
+                    if self.z_stance_offsets[i] < max_hundimiento:
+                        self.z_stance_offsets[i] = max_hundimiento
+                        
+                z[i] += self.z_stance_offsets[i]       # Aplica a la trayectoria
 
         # ============================================================
         # IK
         # ============================================================
 
-        q1, q2, q3 = self.calculate_dar_ik(
-            x,
-            y,
-            z
-        )
-        
+        q1, q2, q3 = self.calculate_dar_ik(x, y, z)
+
         q1_raw = np.copy(q1)
         q2_raw = np.copy(q2)
         q3_raw = np.copy(q3)
@@ -1806,13 +805,8 @@ class AMTQGaitController(Node):
         # JOINT LIMITS
         # ============================================================
 
-        q1, q2, q3 = self.clamp_joint_commands(
+        q1, q2, q3 = self.clamp_joint_commands(q1, q2, q3)
 
-            q1,
-            q2,
-            q3
-        )
-        
         # ============================================================
         # HOME RAW vs CLAMP DEBUG
         # ============================================================
@@ -1820,102 +814,65 @@ class AMTQGaitController(Node):
         if not self.gait_enabled:
 
             self.get_logger().info(
-                f'\n'
-                f'=========== HOME IK ===========\n'
-
-            f'FL RAW = '
-            f'({q1_raw[0]:.4f}, '
-            f'{q2_raw[0]:.4f}, '
-            f'{q3_raw[0]:.4f}) | '
-
-            f'CLAMP = '
-            f'({q1[0]:.4f}, '
-            f'{q2[0]:.4f}, '
-            f'{q3[0]:.4f})\n'
-
-            f'FR RAW = '
-            f'({q1_raw[1]:.4f}, '
-            f'{q2_raw[1]:.4f}, '
-            f'{q3_raw[1]:.4f}) | '
-
-            f'CLAMP = '
-            f'({q1[1]:.4f}, '
-            f'{q2[1]:.4f}, '
-            f'{q3[1]:.4f})\n'
-
-            f'BL RAW = '
-            f'({q1_raw[2]:.4f}, '
-            f'{q2_raw[2]:.4f}, '
-            f'{q3_raw[2]:.4f}) | '
-
-            f'CLAMP = '
-            f'({q1[2]:.4f}, '
-            f'{q2[2]:.4f}, '
-            f'{q3[2]:.4f})\n'
-
-            f'BR RAW = '
-            f'({q1_raw[3]:.4f}, '
-            f'{q2_raw[3]:.4f}, '
-            f'{q3_raw[3]:.4f}) | '
-
-            f'CLAMP = '
-            f'({q1[3]:.4f}, '
-            f'{q2[3]:.4f}, '
-            f'{q3[3]:.4f})\n'
-
-            f'================================'
-        )
-            
-        if self.gait_enabled:
-            self.print_raw_clamp_debug(
-                q1_raw,
-                q2_raw,
-                q3_raw,
-                q1,
-                q2,
-                q3
+                f"\n"
+                f"=========== HOME IK ===========\n"
+                f"FL RAW = "
+                f"({q1_raw[0]:.4f}, "
+                f"{q2_raw[0]:.4f}, "
+                f"{q3_raw[0]:.4f}) | "
+                f"CLAMP = "
+                f"({q1[0]:.4f}, "
+                f"{q2[0]:.4f}, "
+                f"{q3[0]:.4f})\n"
+                f"FR RAW = "
+                f"({q1_raw[1]:.4f}, "
+                f"{q2_raw[1]:.4f}, "
+                f"{q3_raw[1]:.4f}) | "
+                f"CLAMP = "
+                f"({q1[1]:.4f}, "
+                f"{q2[1]:.4f}, "
+                f"{q3[1]:.4f})\n"
+                f"BL RAW = "
+                f"({q1_raw[2]:.4f}, "
+                f"{q2_raw[2]:.4f}, "
+                f"{q3_raw[2]:.4f}) | "
+                f"CLAMP = "
+                f"({q1[2]:.4f}, "
+                f"{q2[2]:.4f}, "
+                f"{q3[2]:.4f})\n"
+                f"BR RAW = "
+                f"({q1_raw[3]:.4f}, "
+                f"{q2_raw[3]:.4f}, "
+                f"{q3_raw[3]:.4f}) | "
+                f"CLAMP = "
+                f"({q1[3]:.4f}, "
+                f"{q2[3]:.4f}, "
+                f"{q3[3]:.4f})\n"
+                f"================================"
             )
+
+        if self.gait_enabled:
+            self.print_raw_clamp_debug(q1_raw, q2_raw, q3_raw, q1, q2, q3)
 
         # ============================================================
         # BUILD COMMAND
         # ============================================================
 
-        command = self.build_command(
-
-            q1,
-            q2,
-            q3
-        )
+        command = self.build_command(q1, q2, q3)
 
         # ============================================================
         # PUBLISH
         # ============================================================
 
-        self.publish_command(
-            command
-        )
+        self.publish_command(command)
 
-        self.publish_joint_states(
-
-            q1,
-            q2,
-            q3
-        )
+        self.publish_joint_states(q1, q2, q3)
 
         # ============================================================
         # DEBUG
         # ============================================================
 
-        self.print_debug_data(
-
-            x,
-            y,
-            z,
-
-            q1,
-            q2,
-            q3
-        )
+        self.print_debug_data(x, y, z, q1, q2, q3)
 
         # ============================================================
         # ADVANCE GAIT TIME
@@ -1925,50 +882,38 @@ class AMTQGaitController(Node):
 
             self.t += self.dt
 
-            if self.t >= 100000.0:
+        if self.t >= 100000.0:
 
-                self.t = (
-
-                    self.t
-                    %
-                    self.T
-                )
+            self.t = self.t % self.T
 
 
 # ====================================================================
 # MAIN
 # ====================================================================
 
+
 def main(args=None):
 
-    rclpy.init(
-        args=args
-    )
+    rclpy.init(args=args)
 
     node = AMTQGaitController()
 
     try:
 
-        rclpy.spin(
-            node
-        )
+        rclpy.spin(node)
 
     except KeyboardInterrupt:
 
-        node.get_logger().info(
-
-            'AMTQ gait controller stopped.'
-        )
+        node.get_logger().info("AMTQ gait controller stopped.")
 
     finally:
-
+        node.save_learned_offsets()
         node.destroy_node()
 
         if rclpy.ok():
-
             rclpy.shutdown()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
     main()
