@@ -53,7 +53,7 @@ class AMTQGaitController(Node):
         self.declare_parameter("dar_lambda", 0.005)
         self.declare_parameter("home_x", 80.0)        # Antes estaba en 120.0. Esto endereza la tibia al caer[cite: 7]
         self.declare_parameter("home_y", 0.0)
-        self.declare_parameter("home_z", -170.0)
+        self.declare_parameter("home_z", -160.0)
         self.declare_parameter("home_duration", 5.0)
         self.declare_parameter("start_gait", False)
         self.declare_parameter("home_test_coxa_zero", True)
