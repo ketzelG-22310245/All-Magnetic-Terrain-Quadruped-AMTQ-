@@ -59,11 +59,11 @@ def generate_launch_description():
         output="screen",
     )
 
-    # 2. Cargar el leg_position_controller DESPUÉS de que termine el broadcaster
+    # 2. Cargar el leg_effort_controller DESPUÉS de que termine el broadcaster
     leg_controller = Node(
         package="controller_manager",
         executable="spawner",
-        arguments=["leg_position_controller"],
+        arguments=["leg_effort_controller"],
         output="screen",
     )
 

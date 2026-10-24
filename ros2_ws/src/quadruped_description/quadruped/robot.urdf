@@ -3,12 +3,6 @@
 <!-- Onshape document_id: c21ae762a09fb4883e987292 -->
 <robot name="amtq_v2">
   <!-- Link base_link -->
-  <link name="world"/>
-    <joint name="fixed_to_world" type="fixed">
-      <parent link="world"/>
-      <child link="base_link"/>
-      <origin xyz="0 0 0.5" rpy="0 0 0"/>
-    </joint>
   <link name="base_link">
     <inertial>
       <origin xyz="8.55676e-05 -2.37343e-05 0.00587907" rpy="0 0 0"/>
@@ -425,7 +419,8 @@
     <parent link="aluminium_25t_servo_horn_3__body1"/>
     <child link="pata_con_iman__cut_extrude6"/>
     <axis xyz="0 0 1"/>
-    <limit effort="10" velocity="10" lower="-0.783653" upper="0"/>
+    <limit effort="10" velocity="10" lower="-1.5708" upper="1.5708"/>
+    <dynamics damping="0.25" friction="0.05"/>
   </joint>
   <!-- Joint from servo_motor_25kg__body9 to aluminium_25t_servo_horn_3__body1 -->
   <joint name="front_left_femur_joint" type="revolute">
@@ -433,7 +428,8 @@
     <parent link="servo_motor_25kg__body9"/>
     <child link="aluminium_25t_servo_horn_3__body1"/>
     <axis xyz="0 0 1"/>
-    <limit effort="10" velocity="10" lower="0" upper="0.785398"/>
+    <limit effort="10" velocity="10" lower="-1.5708" upper="1.5708"/>
+    <dynamics damping="0.25" friction="0.05"/>
   </joint>
   <!-- Joint from base_link to servo_motor_25kg__body9 -->
   <joint name="front_left_coxa_joint" type="revolute">
@@ -441,7 +437,8 @@
     <parent link="base_link"/>
     <child link="servo_motor_25kg__body9"/>
     <axis xyz="0 0 1"/>
-    <limit effort="10" velocity="10" lower="-1.76112" upper="0.595073"/>
+    <limit effort="10" velocity="10" lower="-1.5708" upper="1.5708"/>
+    <dynamics damping="0.25" friction="0.05"/>
   </joint>
   <!-- Link arm_1_3__cut_extrude2 -->
   <link name="arm_1_3__cut_extrude2">
@@ -601,7 +598,8 @@
     <parent link="arm_2_3__cut_extrude4"/>
     <child link="pata_con_iman__cut_extrude6_2"/>
     <axis xyz="0 0 1"/>
-    <limit effort="10" velocity="10" lower="-0.783653" upper="0"/>
+    <limit effort="10" velocity="10" lower="-1.5708" upper="1.5708"/>
+    <dynamics damping="0.25" friction="0.05"/>
   </joint>
   <!-- Joint from arm_1_3__cut_extrude2 to arm_2_3__cut_extrude4 -->
   <joint name="back_left_femur_joint" type="revolute">
@@ -609,7 +607,8 @@
     <parent link="arm_1_3__cut_extrude2"/>
     <child link="arm_2_3__cut_extrude4"/>
     <axis xyz="0 0 1"/>
-    <limit effort="10" velocity="10" lower="-0" upper="0.785398"/>
+    <limit effort="10" velocity="10" lower="-1.5708" upper="1.5708"/>
+    <dynamics damping="0.25" friction="0.05"/>
   </joint>
   <!-- Joint from base_link to arm_1_3__cut_extrude2 -->
   <joint name="back_left_coxa_joint" type="revolute">
@@ -617,7 +616,8 @@
     <parent link="base_link"/>
     <child link="arm_1_3__cut_extrude2"/>
     <axis xyz="0 0 1"/>
-    <limit effort="10" velocity="10" lower="-0.954085" upper="1.40211"/>
+    <limit effort="10" velocity="10" lower="-1.5708" upper="1.5708"/>
+    <dynamics damping="0.25" friction="0.05"/>
   </joint>
   <!-- Link arm_1_3__cut_extrude2_2 -->
   <link name="arm_1_3__cut_extrude2_2">
@@ -778,6 +778,7 @@
     <child link="pata_con_iman__cut_extrude6_3"/>
     <axis xyz="0 0 1"/>
     <limit effort="10" velocity="10" lower="-1.5708" upper="1.5708"/>
+    <dynamics damping="0.25" friction="0.05"/>
   </joint>
   <!-- Joint from arm_1_3__cut_extrude2_2 to arm_2_3__cut_extrude4_2 -->
   <joint name="back_right_femur_joint" type="revolute">
@@ -785,7 +786,8 @@
     <parent link="arm_1_3__cut_extrude2_2"/>
     <child link="arm_2_3__cut_extrude4_2"/>
     <axis xyz="0 0 1"/>
-    <limit effort="10" velocity="10" lower="-0.162163" upper="0.623235"/>
+    <limit effort="10" velocity="10" lower="-1.5708" upper="1.5708"/>
+    <dynamics damping="0.25" friction="0.05"/>
   </joint>
   <!-- Joint from base_link to arm_1_3__cut_extrude2_2 -->
   <joint name="back_right_coxa_joint" type="revolute">
@@ -793,7 +795,8 @@
     <parent link="base_link"/>
     <child link="arm_1_3__cut_extrude2_2"/>
     <axis xyz="0 0 1"/>
-    <limit effort="10" velocity="10" lower="-1.74824" upper="0.607954"/>
+    <limit effort="10" velocity="10" lower="-1.5708" upper="1.5708"/>
+    <dynamics damping="0.25" friction="0.05"/>
   </joint>
   <!-- Link arm_1_3__cut_extrude2_3 -->
   <link name="arm_1_3__cut_extrude2_3">
@@ -953,7 +956,8 @@
     <parent link="arm_2_3__cut_extrude4_3"/>
     <child link="pata_con_iman__cut_extrude6_4"/>
     <axis xyz="0 0 1"/>
-    <limit effort="10" velocity="10" lower="-0.774465" upper="0.00918831"/>
+    <limit effort="10" velocity="10" lower="-1.5708" upper="1.5708"/>
+    <dynamics damping="0.25" friction="0.05"/>
   </joint>
   <!-- Joint from arm_1_3__cut_extrude2_3 to arm_2_3__cut_extrude4_3 -->
   <joint name="front_right_femur_joint" type="revolute">
@@ -961,7 +965,8 @@
     <parent link="arm_1_3__cut_extrude2_3"/>
     <child link="arm_2_3__cut_extrude4_3"/>
     <axis xyz="0 0 1"/>
-    <limit effort="10" velocity="10" lower="-0" upper="0.785398"/>
+    <limit effort="10" velocity="10" lower="-1.5708" upper="1.5708"/>
+    <dynamics damping="0.25" friction="0.05"/>
   </joint>
   <!-- Joint from base_link to arm_1_3__cut_extrude2_3 -->
   <joint name="front_right_coxa_joint" type="revolute">
@@ -969,7 +974,8 @@
     <parent link="base_link"/>
     <child link="arm_1_3__cut_extrude2_3"/>
     <axis xyz="0 0 1"/>
-    <limit effort="10" velocity="10" lower="-0.53088" upper="1.99985"/>
+    <limit effort="10" velocity="10" lower="-1.5708" upper="1.5708"/>
+    <dynamics damping="0.25" friction="0.05"/>
   </joint>
 
   <!-- Plugin gz_ros2_control para Gazebo Harmonic -->
@@ -986,59 +992,60 @@
     </hardware>
 
     <!-- Front Left -->
+    <!-- Front Left -->
     <joint name="front_left_coxa_joint">
-      <command_interface name="position"/>
-      <state_interface name="position"/><state_interface name="velocity"/>
+      <command_interface name="effort"/>
+      <state_interface name="position"/><state_interface name="velocity"/><state_interface name="effort"/>
     </joint>
     <joint name="front_left_femur_joint">
-      <command_interface name="position"/>
-      <state_interface name="position"/><state_interface name="velocity"/>
+      <command_interface name="effort"/>
+      <state_interface name="position"/><state_interface name="velocity"/><state_interface name="effort"/>
     </joint>
     <joint name="front_left_tibia_joint">
-      <command_interface name="position"/>
-      <state_interface name="position"/><state_interface name="velocity"/>
+      <command_interface name="effort"/>
+      <state_interface name="position"/><state_interface name="velocity"/><state_interface name="effort"/>
     </joint>
 
     <!-- Front Right -->
     <joint name="front_right_coxa_joint">
-      <command_interface name="position"/>
-      <state_interface name="position"/><state_interface name="velocity"/>
+      <command_interface name="effort"/>
+      <state_interface name="position"/><state_interface name="velocity"/><state_interface name="effort"/>
     </joint>
     <joint name="front_right_femur_joint">
-      <command_interface name="position"/>
-      <state_interface name="position"/><state_interface name="velocity"/>
+      <command_interface name="effort"/>
+      <state_interface name="position"/><state_interface name="velocity"/><state_interface name="effort"/>
     </joint>
     <joint name="front_right_tibia_joint">
-      <command_interface name="position"/>
-      <state_interface name="position"/><state_interface name="velocity"/>
+      <command_interface name="effort"/>
+      <state_interface name="position"/><state_interface name="velocity"/><state_interface name="effort"/>
     </joint>
 
     <!-- Back Left -->
     <joint name="back_left_coxa_joint">
-      <command_interface name="position"/>
-      <state_interface name="position"/><state_interface name="velocity"/>
+      <command_interface name="effort"/>
+      <state_interface name="position"/><state_interface name="velocity"/><state_interface name="effort"/>
     </joint>
     <joint name="back_left_femur_joint">
-      <command_interface name="position"/>
-      <state_interface name="position"/><state_interface name="velocity"/>
+      <command_interface name="effort"/>
+      <state_interface name="position"/><state_interface name="velocity"/><state_interface name="effort"/>
     </joint>
     <joint name="back_left_tibia_joint">
-      <command_interface name="position"/>
-      <state_interface name="position"/><state_interface name="velocity"/>
+      <command_interface name="effort"/>
+      <state_interface name="position"/><state_interface name="velocity"/><state_interface name="effort"/>
     </joint>
 
     <!-- Back Right -->
     <joint name="back_right_coxa_joint">
-      <command_interface name="position"/>
-      <state_interface name="position"/><state_interface name="velocity"/>
+      <command_interface name="effort"/>
+      <state_interface name="position"/><state_interface name="velocity"/><state_interface name="effort"/>
     </joint>
     <joint name="back_right_femur_joint">
-      <command_interface name="position"/>
-      <state_interface name="position"/><state_interface name="velocity"/>
+      <command_interface name="effort"/>
+      <state_interface name="position"/><state_interface name="velocity"/><state_interface name="effort"/>
     </joint>
     <joint name="back_right_tibia_joint">
-      <command_interface name="position"/>
-      <state_interface name="position"/><state_interface name="velocity"/>
+      <command_interface name="effort"/>
+      <state_interface name="position"/><state_interface name="velocity"/><state_interface name="effort"/>
     </joint>
   </ros2_control>
   <gazebo reference="front_left_tibia">

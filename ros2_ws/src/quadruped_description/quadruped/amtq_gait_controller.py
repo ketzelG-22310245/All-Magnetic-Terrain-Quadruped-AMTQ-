@@ -40,20 +40,20 @@ class AMTQGaitController(Node):
         self.create_subscription(Imu, "/imu", self._imu_cb, 10)
 
         # Configuración del robot
+        self.femur_offsets = np.array([0.1273, 0.1273, 0.1273, 0.2895], dtype=float)
         self.tibia_offsets = np.array([1.8338, 1.8338, 1.8338, 1.8338], dtype=float)
         self.leg_names = ["front_left", "front_right", "back_left", "back_right"]
-
-        # Parámetros ROS 2
+        
        # Parámetros ROS 2
         self.declare_parameter("control_frequency", 50.0)
-        self.declare_parameter("step_length", 30.0)   # Antes estaba en 80.0
-        self.declare_parameter("step_height", 35.0)   # Antes estaba en 40.0[cite: 7]
+        self.declare_parameter("step_length", 35.0)   # Antes estaba en 80.0
+        self.declare_parameter("step_height", 45.0)   # Antes estaba en 40.0[cite: 7]
         self.declare_parameter("gait_period", 1.0)
         self.declare_parameter("dar_iterations", 10)
         self.declare_parameter("dar_lambda", 0.005)
-        self.declare_parameter("home_x", 80.0)        # Antes estaba en 120.0. Esto endereza la tibia al caer[cite: 7]
+        self.declare_parameter("home_x", 100.0)        # Antes estaba en 120.0. Esto endereza la tibia al caer[cite: 7]
         self.declare_parameter("home_y", 0.0)
-        self.declare_parameter("home_z", -160.0)
+        self.declare_parameter("home_z", -135.0)
         self.declare_parameter("home_duration", 5.0)
         self.declare_parameter("start_gait", False)
         self.declare_parameter("home_test_coxa_zero", True)
@@ -471,9 +471,9 @@ class AMTQGaitController(Node):
 
             else:
 
-                q1[i] = (q1_out * self.coxa_axis_dir[i]) - self.S_vec[i] * 0.4636
+                q1[i] = q1_out * self.coxa_axis_dir[i]
 
-            q2[i] = q2_out - 0.1273
+            q2[i] = q2_out - self.femur_offsets[i]
 
             q3[i] = q3_out - self.tibia_offsets[i]
 
@@ -555,13 +555,13 @@ class AMTQGaitController(Node):
             # XYZ
             # ========================================================
 
-            direction_x = -1.0 if i in [0, 1] else 1.0
+            ramp = min(1.0, t / self.T)
 
-            x[i] = self.x_home + (paso * direction_x) * 0.707
+            x[i] = self.x_home
 
-            y[i] = self.y_home + paso * 0.707 * self.signo_y[i]
+            y[i] = self.y_home + (paso * ramp * self.signo_y[i])
 
-            z[i] = self.z_home + z_offset * self.signo_z
+            z[i] = self.z_home + (z_offset * ramp * self.signo_z)
 
         return x, y, z, phases
 
@@ -789,7 +789,7 @@ class AMTQGaitController(Node):
                     if self.z_stance_offsets[i] < max_hundimiento:
                         self.z_stance_offsets[i] = max_hundimiento
                         
-                z[i] += self.z_stance_offsets[i]       # Aplica a la trayectoria
+                #z[i] += self.z_stance_offsets[i]       # Aplica a la trayectoria
 
         # ============================================================
         # IK
