@@ -10,6 +10,7 @@ controller_manager:
 
 leg_effort_controller:
   ros__parameters:
+    interface_name: effort
     joints:
       - front_left_coxa_joint
       - front_left_femur_joint

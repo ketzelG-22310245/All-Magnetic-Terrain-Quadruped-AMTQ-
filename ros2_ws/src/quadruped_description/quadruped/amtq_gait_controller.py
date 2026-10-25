@@ -41,13 +41,13 @@ class AMTQGaitController(Node):
 
         # Configuración del robot
         self.femur_offsets = np.array([0.1273, 0.1273, 0.1273, 0.2895], dtype=float)
-        self.tibia_offsets = np.array([1.8338, 1.8338, 1.8338, 1.8338], dtype=float)
+        self.tibia_offsets = np.array([0.2625, 0.2625, 0.2625, 0.4247], dtype=float)
         self.leg_names = ["front_left", "front_right", "back_left", "back_right"]
         
        # Parámetros ROS 2
         self.declare_parameter("control_frequency", 50.0)
-        self.declare_parameter("step_length", 35.0)   # Antes estaba en 80.0
-        self.declare_parameter("step_height", 45.0)   # Antes estaba en 40.0[cite: 7]
+        self.declare_parameter("step_length", 20.0)   # Antes estaba en 80.0
+        self.declare_parameter("step_height", 25.0)   # Antes estaba en 40.0[cite: 7]
         self.declare_parameter("gait_period", 1.0)
         self.declare_parameter("dar_iterations", 10)
         self.declare_parameter("dar_lambda", 0.005)
@@ -557,9 +557,11 @@ class AMTQGaitController(Node):
 
             ramp = min(1.0, t / self.T)
 
-            x[i] = self.x_home
+            direction_x = -1.0 if i in [0, 1] else 1.0
 
-            y[i] = self.y_home + (paso * ramp * self.signo_y[i])
+            x[i] = self.x_home + (paso * direction_x * 0.707 * ramp)
+
+            y[i] = self.y_home + (paso * ramp * self.signo_y[i] * 0.707)
 
             z[i] = self.z_home + (z_offset * ramp * self.signo_z)
 

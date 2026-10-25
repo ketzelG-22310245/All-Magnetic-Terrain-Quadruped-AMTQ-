@@ -59,11 +59,13 @@ def generate_launch_description():
         output="screen",
     )
 
-    # 2. Cargar el leg_effort_controller DESPUÉS de que termine el broadcaster
+    yaml_path = os.path.join(pkg_share, "config", "ros2_controllers.yaml")
+
+    # 2. Cargar el leg_effort_controller pasándole el YAML explícitamente
     leg_controller = Node(
         package="controller_manager",
         executable="spawner",
-        arguments=["leg_effort_controller"],
+        arguments=["leg_effort_controller", "--param-file", yaml_path],
         output="screen",
     )
 

@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/init/env python3
 import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import JointState
@@ -9,28 +9,13 @@ class AMTQPIDController(Node):
     def __init__(self):
         super().__init__('amtq_pid_controller')
 
-        # Ganancias estables para inercia ligera (coxa, femur, tibia) sin chattering discreto
-        self.kp = np.array([
-            8.0, 12.0, 10.0,   # Front Left
-            8.0, 12.0, 10.0,   # Front Right
-            8.0, 12.0, 10.0,   # Back Left
-            8.0, 12.0, 10.0    # Back Right
-        ])
-        self.ki = np.array([
-            2.0, 6.0, 4.0,
-            2.0, 6.0, 4.0,
-            2.0, 6.0, 4.0,
-            2.0, 6.0, 4.0
-        ])
-        self.kd = np.array([
-            0.05, 0.10, 0.08,
-            0.05, 0.10, 0.08,
-            0.05, 0.10, 0.08,
-            0.05, 0.10, 0.08
-        ])
+        # Ganancias analíticas exactas de tu reporte técnico (Perfil Suave)
+        self.kp = 10.0
+        self.ki = 15.0
+        self.kd = 0.20
 
-        self.max_torque = 4.0       # Límite suave para evitar latigazos
-        self.max_integral = 0.25
+        self.max_torque = 8.0
+        self.max_integral = 0.35
 
         self.joint_names = [
             'front_left_coxa_joint', 'front_left_femur_joint', 'front_left_tibia_joint',
@@ -39,12 +24,19 @@ class AMTQPIDController(Node):
             'back_right_coxa_joint', 'back_right_femur_joint', 'back_right_tibia_joint'
         ]
 
-        # Postura HOME 100% plana sobre el suelo (q2 = q3 mantiene la tibia vertical)
+        # Masas identificadas en el URDF para compensación analítica exacta de gravedad
+        # [coxa_mass, femur_mass, tibia_mass] aprox por pata
+        self.mass_femur = 0.0596   # kg
+        self.mass_tibia = 0.2215   # kg
+        self.L_femur = 0.08        # m (80 mm)
+        self.L_tibia = 0.1616      # m (161.64 mm)
+        self.g = 9.81              # m/s^2
+
         self.home_posture = np.array([
-            0.0,  0.0, 0.0,     # Front Left  (100% plano)
-            0.0,  0.0, 0.0,     # Front Right (100% plano)
-            0.0,  0.0, 0.0,     # Back Left   (100% plano)
-            0.0, -0.1622, 0.0   # Back Right  (compensa el offset de 0.1622 rad del URDF)
+            0.0, 0.0, 0.0,
+            0.0, 0.0, 0.0,
+            0.0, 0.0, 0.0,
+            0.0, 0.0, 0.0
         ])
 
         self.q_ref = self.home_posture.copy()
@@ -57,7 +49,7 @@ class AMTQPIDController(Node):
         self.states_received = False
         self.gait_active = False
         self.warmup_steps = 0
-        self.total_warmup_steps = 150  # 1.5 s de rampa suave
+        self.total_warmup_steps = 150
 
         self.sub_ref = self.create_subscription(
             Float64MultiArray,
@@ -77,10 +69,9 @@ class AMTQPIDController(Node):
             10
         )
 
-        # Lazo a 100 Hz sincronizado con Gazebo
         self.dt = 0.01
         self.timer = self.create_timer(self.dt, self.control_loop)
-        self.get_logger().info('Controlador PID AMTQ estable iniciado.')
+        self.get_logger().info('Controlador PID Analítico con Compensación de Gravedad iniciado.')
 
     def ref_callback(self, msg):
         if len(msg.data) == 12:
@@ -93,11 +84,35 @@ class AMTQPIDController(Node):
                 idx = msg.name.index(name)
                 self.q_meas[i] = msg.position[idx]
                 if len(msg.velocity) > idx:
-                    # Filtro pasa-bajas exponencial para eliminar ruido/vibración derivativa
                     self.dq_filtered[i] = 0.6 * self.dq_filtered[i] + 0.4 * msg.velocity[idx]
         if not self.states_received:
             self.q_initial = self.q_meas.copy()
             self.states_received = True
+
+    def compute_gravity_compensation(self, q):
+        """Calcula analíticamente el torque de gravedad Tau_g(q) para las 12 articulaciones"""
+        tau_g = np.zeros(12)
+        for leg in range(4):
+            idx_femur = leg * 3 + 1
+            idx_tibia = leg * 3 + 2
+            
+            q2 = q[idx_femur]
+            q3 = q[idx_tibia]
+            
+            # Modelo dinámico de par gravitacional para fémur y tibia
+            # Tau_femur = (m_femur * g * L_femur_com * cos(q2)) + (m_tibia * g * (L_femur * cos(q2) + L_tibia_com * cos(q2 - q3)))
+            tau_femur_g = (self.mass_femur * self.g * (self.L_femur / 2.0) * np.cos(q2)) + \
+                          (self.mass_tibia * self.g * (self.L_femur * np.cos(q2) + (self.L_tibia / 2.0) * np.cos(q2 - q3)))
+            
+            # Tau_tibia = m_tibia * g * L_tibia_com * cos(q2 - q3)
+            tau_tibia_g = self.mass_tibia * self.g * (self.L_tibia / 2.0) * np.cos(q2 - q3)
+            
+            tau_g[idx_femur] = tau_femur_g
+            tau_g[idx_tibia] = tau_tibia_g
+            # Coxa soporta principalmente carga lateral (se deja en 0 o fricción mínima)
+            tau_g[leg * 3] = 0.0
+            
+        return tau_g
 
     def control_loop(self):
         if not self.states_received:
@@ -117,7 +132,14 @@ class AMTQPIDController(Node):
 
         d_error = -self.dq_filtered
 
-        tau = (self.kp * error) + (self.ki * self.integral_err) + (self.kd * d_error)
+        # 1. Ley de control PID estándar
+        tau_pid = (self.kp * error) + (self.ki * self.integral_err) + (self.kd * d_error)
+
+        # 2. Término de prealimentación por modelo analítico de gravedad (Torque Feedforward)
+        tau_grav = self.compute_gravity_compensation(self.q_meas)
+
+        # Torque total = PID + Compensación Gravitacional Analítica
+        tau = tau_pid + tau_grav
         tau = np.clip(tau, -self.max_torque, self.max_torque)
 
         msg = Float64MultiArray()
@@ -128,7 +150,6 @@ class AMTQPIDController(Node):
         msg = Float64MultiArray()
         msg.data = [0.0] * 12
         self.pub_effort.publish(msg)
-        self.get_logger().info('Torques en 0.0 Nm enviados. Apagando PID limpiamente.')
 
 def main(args=None):
     rclpy.init(args=args)
