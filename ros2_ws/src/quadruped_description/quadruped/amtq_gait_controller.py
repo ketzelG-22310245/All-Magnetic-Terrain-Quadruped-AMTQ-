@@ -462,20 +462,21 @@ class AMTQGaitController(Node):
             q3_out = np.arctan2(np.sin(q3_dar), np.cos(q3_dar))
 
             # ========================================================
-            # OFFSETS
+            # OFFSETS (Con restricción de base 100% plana q3 = q2)
             # ========================================================
 
             if self.home_test_coxa_zero and not self.gait_enabled:
-
                 q1[i] = 0.0
-
             else:
-
                 q1[i] = q1_out * self.coxa_axis_dir[i]
 
+            # Ángulo del fémur sin el offset extra en back_right
+            q2_base = q2_out - 0.1273
             q2[i] = q2_out - self.femur_offsets[i]
 
-            q3[i] = q3_out - self.tibia_offsets[i]
+            # Para que la base del electroimán sea 100% paralela al suelo (dZ = 0.00 mm),
+            # la cinemática del STL en robot.urdf exige que q3 = q2_base
+            q3[i] = q2_base
 
         return q1, q2, q3
 

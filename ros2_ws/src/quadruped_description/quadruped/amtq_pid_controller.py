@@ -9,13 +9,14 @@ class AMTQPIDController(Node):
     def __init__(self):
         super().__init__('amtq_pid_controller')
 
-        # Ganancias analíticas exactas de tu reporte técnico (Perfil Suave)
-        self.kp = 10.0
-        self.ki = 15.0
-        self.kd = 0.20
+        # Ganancias exactas del Reporte de Diseño PID - Perfil Rígido (Sección 4)
+        # Kp = 15.0 Nm/rad, Ki = 25.0 Nm/(rad*s), Kd = 0.30 Nm*s/rad
+        self.kp = np.full(12, 15.0)
+        self.ki = np.full(12, 25.0)
+        self.kd = np.full(12, 0.30)
 
-        self.max_torque = 8.0
-        self.max_integral = 0.35
+        self.max_torque = 10.0      # Límite nominal del actuador en robot.urdf (10 Nm)
+        self.max_integral = 0.40    # Permite hasta 10.0 Nm de corrección integral (25.0 * 0.40)
 
         self.joint_names = [
             'front_left_coxa_joint', 'front_left_femur_joint', 'front_left_tibia_joint',
@@ -147,9 +148,10 @@ class AMTQPIDController(Node):
         self.pub_effort.publish(msg)
 
     def send_zero_torque(self):
-        msg = Float64MultiArray()
-        msg.data = [0.0] * 12
-        self.pub_effort.publish(msg)
+        if rclpy.ok():
+            msg = Float64MultiArray()
+            msg.data = [0.0] * 12
+            self.pub_effort.publish(msg)
 
 def main(args=None):
     rclpy.init(args=args)
@@ -157,8 +159,9 @@ def main(args=None):
     try:
         rclpy.spin(node)
     except KeyboardInterrupt:
-        node.send_zero_torque()
+        pass
     finally:
+        node.send_zero_torque()
         node.destroy_node()
         if rclpy.ok():
             rclpy.shutdown()
