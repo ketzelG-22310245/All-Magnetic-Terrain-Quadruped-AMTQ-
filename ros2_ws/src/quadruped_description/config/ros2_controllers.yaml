@@ -6,7 +6,7 @@ controller_manager:
       type: joint_state_broadcaster/JointStateBroadcaster
 
     leg_effort_controller:
-      type: effort_controllers/JointGroupEffortController
+      type: forward_command_controller/ForwardCommandController
 
 leg_effort_controller:
   ros__parameters:

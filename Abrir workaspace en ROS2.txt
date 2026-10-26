@@ -1,6 +1,39 @@
-cd /mnt/c/Users/ketze/Desktop/AMTQ_2.0/AMTQ_V2_DEFINITIVO/ros2_ws
+ABRIR AREA DE TRABAJO
+----------------------------------------------------------------------
+cd ~/All-Magnetic-Terrain-Quadruped-AMTQ-/ros2_ws
+
 colcon build --symlink-install
+
+colcon build --packages-select quadruped_description
+
 source install/setup.bash
-ros2 launch urdf_tutorial display.launch.py \
-  model:=$(ros2 pkg prefix --share quadruped_description)/quadruped/robot.urdf \
-  rviz_config:=$(ros2 pkg prefix --share quadruped_description)/rviz/view_robot.rviz
+
+--Alternativa--
+
+cd ~/All-Magnetic-Terrain-Quadruped-AMTQ-/ros2_ws
+
+source /opt/ros/lyrical/setup.bash
+
+colcon build --symlink-install
+
+source install/setup.bash
+
+LANZAR GAZEBO
+----------------------------------------------------------------------------------
+unset GTK_PATH GIO_MODULE_DIR LOCPATH
+
+export LD_LIBRARY_PATH="/opt/ros/lyrical/lib:$LD_LIBRARY_PATH"
+
+ros2 launch quadruped_description sim.launch.py
+
+CARGAR CONTROLADOR PID MANUALMENTE
+----------------------------------------------------------------------------------
+ros2 run controller_manager spawner leg_effort_controller --param-file ~/All-Magnetic-Terrain-Quadruped-AMTQ-/ros2_ws/src/quadruped_description/config/ros2_controllers.yaml
+
+ros2 run controller_manager spawner leg_effort_controller --param-file ~/All-Magnetic-Terrain-Quadruped-AMTQ-/ros2_ws/src/quadruped_description/config/ros2_controllers.yaml
+
+python3 ~/All-Magnetic-Terrain-Quadruped-AMTQ-/ros2_ws/src/quadruped_description/quadruped/amtq_pid_controller.py
+
+CARGAR GAIT CONTROLLER
+----------------------------------------------------------------------------------
+python3 ~/All-Magnetic-Terrain-Quadruped-AMTQ-/ros2_ws/src/quadruped_description/quadruped/amtq_gait_controller.py --ros-args -p start_gait:=true -p print_debug:=false
