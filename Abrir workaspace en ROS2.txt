@@ -37,3 +37,26 @@ python3 ~/All-Magnetic-Terrain-Quadruped-AMTQ-/ros2_ws/src/quadruped_description
 CARGAR GAIT CONTROLLER
 ----------------------------------------------------------------------------------
 python3 ~/All-Magnetic-Terrain-Quadruped-AMTQ-/ros2_ws/src/quadruped_description/quadruped/amtq_gait_controller.py --ros-args -p start_gait:=true -p print_debug:=false
+
+----------------------------------------------------------------------------------
+LAPTOP
+----------------------------------------------------------------------------------
+
+cd ~/All-Magnetic-Terrain-Quadruped-AMTQ-/ros2_ws
+
+colcon build --symlink-install
+
+colcon build --packages-select quadruped_description
+
+ros2 launch quadruped_description sim.launch.py
+
+python3 ros2_ws/src/quadruped_description/quadruped/amtq_pid_controller.py
+
+python3 src/quadruped_description/quadruped/amtq_gait_controller.py --ros-args -p start_gait:=true -p print_debug:=true
+
+-------------------------------------------------------------------------
+Borrar json: 
+
+rm -f foot_calibration.json ../foot_calibration.json
+echo "foot_calibration.json" >> ../.gitignore
+-------------------------------------------------------------------------
