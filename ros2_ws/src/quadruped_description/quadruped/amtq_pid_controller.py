@@ -34,12 +34,11 @@ class AMTQPIDController(Node):
         self.g = 9.81              # m/s^2
 
         # Postura HOME exacta de DAR IK para (x=100, y=0, z=-135) con base 100% plana
-        # Postura HOME exacta de DAR IK para (x=100, y=0, z=-135) con base 100% plana
         self.home_posture = np.array([
-            0.0, 0.1734, 0.1734,  # front_left (q2 == q3)
-            0.0, 0.1734, 0.1734,  # front_right (q2 == q3)
-            0.0, 0.1734, 0.1734,  # back_left (q2 == q3)
-            0.0, 0.0112, 0.1734   # back_right (q2 = q3 - 0.1622)
+         0.0,  0.0978, 0.0978,  # front_left
+         0.0,  0.0978, 0.0978,  # front_right
+         0.0,  0.0978, 0.0978,  # back_left
+         0.0, -0.0644, 0.0978   # back_right
         ])
 
         self.q_ref = self.home_posture.copy()

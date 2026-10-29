@@ -42,7 +42,7 @@ python3 ~/All-Magnetic-Terrain-Quadruped-AMTQ-/ros2_ws/src/quadruped_description
 LAPTOP
 ----------------------------------------------------------------------------------
 
-cd ~/All-Magnetic-Terrain-Quadruped-AMTQ-/ros2_ws
+cd /mnt/c/Users/ketze/Desktop/AMTQ_2.0/AMTQ_V2_DEFINITIVO/ros2_ws
 
 colcon build --symlink-install
 
@@ -60,3 +60,10 @@ Borrar json:
 rm -f foot_calibration.json ../foot_calibration.json
 echo "foot_calibration.json" >> ../.gitignore
 -------------------------------------------------------------------------
+
+-------------------------------------------------------------------------
+Trazar caminata:
+
+ros2 run ros_gz_bridge parameter_bridge /world/default/dynamic_pose/info@tf2_msgs/msg/TFMessage[gz.msgs.Pose_V
+python3 src/quadruped_description/quadruped/gazebo_trail.py
+--------------------------------------------------------------------------
