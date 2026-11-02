@@ -7,4 +7,4 @@ ros2_ws/log/
 __pycache__/
 *.pyc
 .DS_Store
-Thumbs.db
+Thumbs.dbfoot_calibration.json
