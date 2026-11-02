@@ -60,7 +60,7 @@ class AMTQGaitController(Node):
         
        # Parámetros ROS 2
         self.declare_parameter("control_frequency", 50.0)
-        self.declare_parameter("step_length", 20.0)   # Antes estaba en 80.0
+        self.declare_parameter("step_length", 40.0)   # Antes estaba en 80.0
         self.declare_parameter("step_height", 25.0)   # Antes estaba en 40.0[cite: 7]
         self.declare_parameter("gait_period", 1.0)
         self.declare_parameter("dar_iterations", 10)
@@ -164,11 +164,17 @@ class AMTQGaitController(Node):
 
     def load_learned_offsets(self):
         if os.path.exists(self.config_file):
-            with open(self.config_file, "r") as f:
-                data = json.load(f)
-                self.z_stance_offsets = np.array(data.get("z_offsets", [0, 0, 0, 0]))
-                self.learned_heading_rad = float(data.get("learned_heading_rad", 0.7854))
-                self.learned_yaw_trim = float(data.get("learned_yaw_trim", 0.0))
+            try:
+                with open(self.config_file, "r") as f:
+                    data = json.load(f)
+                    self.z_stance_offsets = np.array(data.get("z_offsets", [0, 0, 0, 0]), dtype=float)
+                    self.learned_heading_rad = float(data.get("learned_heading_rad", 0.7854))
+                    self.learned_yaw_trim = float(data.get("learned_yaw_trim", 0.0))
+            except Exception as e:
+                self.get_logger().warning(f"Error cargando calibración previa, reiniciando valores nominales: {e}")
+                self.z_stance_offsets = np.zeros(4)
+                self.learned_heading_rad = 0.7854
+                self.learned_yaw_trim = 0.0
 
     def save_learned_offsets(self):
         with open(self.config_file, "w") as f:
@@ -629,7 +635,7 @@ class AMTQGaitController(Node):
 
             ramp = min(1.0, t / self.T)
 
-            direction_x = -1.0 if i in [0, 1] else 1.0
+            direction_x = -1.0 if i in [0, 1] else -1.0
 
             # Escala diferencial izquierda (i=0,2) vs derecha (i=1,3) para mantener Yaw = 0.0 deg
             side_scale = (1.0 - steer) if i in [0, 2] else (1.0 + steer)
