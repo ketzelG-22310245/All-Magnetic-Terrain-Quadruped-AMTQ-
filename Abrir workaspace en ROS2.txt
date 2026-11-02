@@ -30,8 +30,6 @@ CARGAR CONTROLADOR PID MANUALMENTE
 ----------------------------------------------------------------------------------
 ros2 run controller_manager spawner leg_effort_controller --param-file ~/All-Magnetic-Terrain-Quadruped-AMTQ-/ros2_ws/src/quadruped_description/config/ros2_controllers.yaml
 
-ros2 run controller_manager spawner leg_effort_controller --param-file ~/All-Magnetic-Terrain-Quadruped-AMTQ-/ros2_ws/src/quadruped_description/config/ros2_controllers.yaml
-
 python3 ~/All-Magnetic-Terrain-Quadruped-AMTQ-/ros2_ws/src/quadruped_description/quadruped/amtq_pid_controller.py
 
 CARGAR GAIT CONTROLLER
