@@ -9,14 +9,25 @@ class AMTQPIDController(Node):
     def __init__(self):
         super().__init__('amtq_pid_controller')
 
-        # Ganancias exactas del Reporte de Diseño PID - Perfil Rígido (Sección 4)
-        # Kp = 15.0 Nm/rad, Ki = 25.0 Nm/(rad*s), Kd = 0.30 Nm*s/rad
-        self.kp = np.full(12, 15.0)
-        self.ki = np.full(12, 25.0)
-        self.kd = np.full(12, 0.30)
+        # Ganancias PID diferenciadas por grado de libertad: [Coxa, Femur, Tibia] x 4 patas
+        # Coxa: mayor Kp/Ki para vencer fricción lateral en STANCE sin rezago
+        # Femur: sintonización analítica nominal (15.0, 25.0, 0.30)
+        # Tibia: mayor rigidez (22.0, 30.0, 0.40) para sostener paralelismo 100% plano (m_tibia = 3.7x m_femur)
+        self.kp = np.tile([20.0, 15.0, 22.0], 4)
+        self.ki = np.tile([30.0, 25.0, 30.0], 4)
+        self.kd = np.tile([0.35, 0.30, 0.40], 4)
 
-        self.max_torque = 10.0      # Límite nominal del actuador en robot.urdf (10 Nm)
-        self.max_integral = 0.40    # Permite hasta 10.0 Nm de corrección integral (25.0 * 0.40)
+        # Offset geométrico real del fémur en URDF (corrige la asimetría de 0.1622 rad en back_right)
+        self.femur_cad_corr = np.array([0.0, 0.0, 0.0, 0.1622])
+
+        # Parámetros físicos extraídos del URDF para compensación de gravedad
+        self.m_femur = 0.0596     # kg
+        self.L_femur = 0.0800     # m (80.0 mm)
+        self.m_tibia = 0.2215     # kg
+        self.L_tibia = 0.16164    # m (161.64 mm)
+        self.g = 9.81             # m/s^2
+        self.max_torque = 2.45    # Nm (Servomotor 25 kg·cm)
+        self.max_integral = 0.25  # rad·s (Límite anti-windup del término integral)
 
         self.joint_names = [
             'front_left_coxa_joint', 'front_left_femur_joint', 'front_left_tibia_joint',
@@ -24,14 +35,6 @@ class AMTQPIDController(Node):
             'back_left_coxa_joint', 'back_left_femur_joint', 'back_left_tibia_joint',
             'back_right_coxa_joint', 'back_right_femur_joint', 'back_right_tibia_joint'
         ]
-
-        # Masas identificadas en el URDF para compensación analítica exacta de gravedad
-        # [coxa_mass, femur_mass, tibia_mass] aprox por pata
-        self.mass_femur = 0.0596   # kg
-        self.mass_tibia = 0.2215   # kg
-        self.L_femur = 0.08        # m (80 mm)
-        self.L_tibia = 0.1616      # m (161.64 mm)
-        self.g = 9.81              # m/s^2
 
         # Postura HOME exacta de DAR IK para (x=100, y=0, z=-135) con base 100% plana
         self.home_posture = np.array([
@@ -92,28 +95,23 @@ class AMTQPIDController(Node):
             self.states_received = True
 
     def compute_gravity_compensation(self, q):
-        """Calcula analíticamente el torque de gravedad Tau_g(q) para las 12 articulaciones"""
         tau_g = np.zeros(12)
         for leg in range(4):
             idx_femur = leg * 3 + 1
             idx_tibia = leg * 3 + 2
-            
-            q2 = q[idx_femur]
+
+            # Ángulo físico real respecto a la horizontal (corrigiendo offset CAD de back_right)
+            q2 = q[idx_femur] + self.femur_cad_corr[leg]
             q3 = q[idx_tibia]
-            
-            # Modelo dinámico de par gravitacional para fémur y tibia
-            # Tau_femur = (m_femur * g * L_femur_com * cos(q2)) + (m_tibia * g * (L_femur * cos(q2) + L_tibia_com * cos(q2 - q3)))
-            tau_femur_g = (self.mass_femur * self.g * (self.L_femur / 2.0) * np.cos(q2)) + \
-                          (self.mass_tibia * self.g * (self.L_femur * np.cos(q2) + (self.L_tibia / 2.0) * np.cos(q2 - q3)))
-            
-            # Tau_tibia = m_tibia * g * L_tibia_com * cos(q2 - q3)
-            tau_tibia_g = self.mass_tibia * self.g * (self.L_tibia / 2.0) * np.cos(q2 - q3)
-            
-            tau_g[idx_femur] = tau_femur_g
-            tau_g[idx_tibia] = tau_tibia_g
-            # Coxa soporta principalmente carga lateral (se deja en 0 o fricción mínima)
-            tau_g[leg * 3] = 0.0
-            
+
+            tau_tibia = self.m_tibia * self.g * (self.L_tibia / 2.0) * np.sin(q2 - q3)
+            tau_femur = (
+                self.m_femur * self.g * (self.L_femur / 2.0) +
+                self.m_tibia * self.g * self.L_femur
+            ) * np.cos(q2) + tau_tibia
+
+            tau_g[idx_femur] = tau_femur
+            tau_g[idx_tibia] = tau_tibia
         return tau_g
 
     def control_loop(self):

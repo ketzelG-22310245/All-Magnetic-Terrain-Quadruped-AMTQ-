@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import json
 import os
+import subprocess
 import rclpy
 import numpy as np
 
@@ -30,12 +31,23 @@ class AMTQGaitController(Node):
         self.imu_data = None
         self.gait_enabled = False
         
+        subprocess.Popen(
+            ["ros2", "run", "ros_gz_bridge", "parameter_bridge",
+             "/world/default/dynamic_pose/info@tf2_msgs/msg/TFMessage[gz.msgs.Pose_V",
+             "/world/empty/dynamic_pose/info@tf2_msgs/msg/TFMessage[gz.msgs.Pose_V"],
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+        )
         self.create_subscription(
             TFMessage, "/world/default/dynamic_pose/info", self._pose_cb, 10
+        )
+        self.create_subscription(
+            TFMessage, "/world/empty/dynamic_pose/info", self._pose_cb, 10
         )
 
         self.config_file = "foot_calibration.json"
         self.load_learned_offsets()
+        if os.path.exists("learning_log.csv"):
+         os.remove("learning_log.csv")
 
         # Suscriptores de contacto
         self.create_subscription(
@@ -103,7 +115,7 @@ class AMTQGaitController(Node):
         self.L1, self.L2, self.L3 = 54.32, 80.00, 161.64
         self.coxa_axis_dir = np.array([-1.0, -1.0, -1.0, -1.0])
         self.S_vec = np.array([1.0, -1.0, -1.0, 1.0])
-        self.signo_y = np.array([1.0, -1.0, -1.0, 1.0])
+        self.signo_y = np.array([1.0, -1.0, 1.0, -1.0])
         self.signo_z = 1.0
         self.desfase = np.array([0.75, 0.00, 0.25, 0.50]) * self.T
 
@@ -145,11 +157,22 @@ class AMTQGaitController(Node):
 
     def _imu_cb(self, msg):
         self.imu_data = msg
+        q = msg.orientation
+        self.current_yaw = np.arctan2(2.0 * (q.w * q.z + q.x * q.y), 1.0 - 2.0 * (q.y * q.y + q.z * q.z))
+        if self.initial_yaw is None and self.gait_enabled:
+            self.initial_yaw = self.current_yaw
     
     def _pose_cb(self, msg):
         if not msg.transforms:
             return
-        t = msg.transforms[0]
+        t = None
+        for tf in msg.transforms:
+            name = tf.child_frame_id.lower()
+            if name == "quadruped" or name.endswith("/quadruped") or name.endswith("::quadruped"):
+                t = tf
+                break
+        if t is None:
+            t = msg.transforms[0]
         self.pose_x = t.transform.translation.x
         self.pose_y = t.transform.translation.y
         q = t.transform.rotation
@@ -540,10 +563,15 @@ class AMTQGaitController(Node):
             dy_step = (self.pose_y - self.last_learn_y) * 1000.0
             step_dist = np.hypot(dx_step, dy_step)
 
+            if step_dist > 1.5:
+                drift_ratio = np.clip(dx_step / step_dist, -0.5, 0.5)
+                self.learned_heading_rad -= 0.05 * drift_ratio
+                self.learned_heading_rad = float(np.clip(self.learned_heading_rad, 0.45, 1.10))
+
             if self.initial_yaw is not None:
                 raw_yaw_err = self.current_yaw - self.initial_yaw
                 yaw_err = np.arctan2(np.sin(raw_yaw_err), np.cos(raw_yaw_err))
-                self.learned_yaw_trim = float(np.clip(self.learned_yaw_trim - 0.05 * yaw_err, -0.30, 0.30))
+                self.learned_yaw_trim = float(np.clip(self.learned_yaw_trim - 0.05 * yaw_err, -0.45, 0.45))
             else:
                 yaw_err = 0.0
 
@@ -551,10 +579,22 @@ class AMTQGaitController(Node):
             self.last_learn_y = self.pose_y
             self.last_learn_t = t
             self.save_learned_offsets()
+            
+            with open("learning_log.csv", "a") as f_csv:
+             f_csv.write(
+                 f"{t:.2f},{self.pose_x*1000:.2f},{self.pose_y*1000:.2f},"
+                 f"{dx_step:.2f},{dy_step:.2f},{np.degrees(self.learned_heading_rad):.2f},"
+                 f"{np.degrees(yaw_err):.2f},{self.learned_yaw_trim:.4f}\n"
+             )
             self.get_logger().info(
-                f"[LEARN] YawErr={np.degrees(yaw_err):+5.2f} deg | "
-                f"YawTrim={self.learned_yaw_trim:+.4f} | Avance={step_dist:4.1f} mm (dX={dx_step:+.1f}, dY={dy_step:+.1f})"
+                f"[LEARN] Heading={np.degrees(self.learned_heading_rad):.1f} deg | "
+                f"YawErr={np.degrees(yaw_err):+5.2f} deg | "
+                f"YawTrim={self.learned_yaw_trim:+.4f} | "
+                f"Avance={step_dist:4.1f} mm (dX={dx_step:+.1f}, dY={dy_step:+.1f})"
             )
+
+        kx = np.cos(self.learned_heading_rad)
+        ky = np.sin(self.learned_heading_rad)
 
         if self.initial_yaw is not None:
             raw_err = self.current_yaw - self.initial_yaw
@@ -562,78 +602,39 @@ class AMTQGaitController(Node):
         else:
             yaw_err_now = 0.0
 
-        steer = np.clip(self.learned_yaw_trim - 0.35 * yaw_err_now, -0.35, 0.35)
-        # ------------------------------------------------------------
-        # GAIT TIMING
-        # ------------------------------------------------------------
+        steer = np.clip(self.learned_yaw_trim - 0.40 * yaw_err_now, -0.45, 0.45)
 
         T_swing = self.T / 4.0
-
         T_stance = 3.0 * self.T / 4.0
 
         for i in range(4):
-
-            # --------------------------------------------------------
-            # LOCAL CLOCK
-            # --------------------------------------------------------
-
             t_effective = t + self.desfase[i]
-
             t_cycle = t_effective % self.T
 
-            # ========================================================
-            # SWING
-            # ========================================================
-
             if t_cycle < T_swing:
-
                 phases.append("SWING")
-
                 phi = np.pi * t_cycle / T_swing
-
                 paso = (self.L / 2.0) * (1.0 - np.cos(phi)) - (self.L / 2.0)
-
                 if self.debug:
-                    self.get_logger().info(
-                        f"{self.leg_names[i]} | " f"SWING | paso={paso:.2f}"
-                    )
-
+                    self.get_logger().info(f"{self.leg_names[i]} | SWING | paso={paso:.2f}")
                 z_offset = self.H * np.sin(phi)
-
-            # ========================================================
-            # STANCE
-            # ========================================================
-
             else:
-
                 phases.append("STANCE")
-
                 t_stance_local = t_cycle - T_swing
-
                 progress_stance = t_stance_local / T_stance
-
                 paso = self.L / 2.0 - (self.L * progress_stance)
-
                 if self.debug:
-                    self.get_logger().info(
-                        f"{self.leg_names[i]} | " f"STANCE | paso={paso:.2f}"
-                    )
-
+                    self.get_logger().info(f"{self.leg_names[i]} | STANCE | paso={paso:.2f}")
                 z_offset = 0.0
 
-            # ========================================================
-            # XYZ
-            # ========================================================
-
             ramp = min(1.0, t / self.T)
+            direction_x = -1.0 if i in [0, 1] else 1.0
 
-            # Escala diferencial izquierda (i=0,2) vs derecha (i=1,3) para mantener Yaw = 0.0 deg
-            side_scale = (1.0 - steer) if i in [0, 2] else (1.0 + steer)
+            # Realimentación negativa corregida: (1.0 + steer) en [0, 2] y (1.0 - steer) en [1, 3]
+            side_scale = (1.0 + steer) if i in [0, 2] else (1.0 - steer)
 
-            # Barrido tangencial con radio constante r_xy = x_home (0.00 mm de despegue en STANCE)
-            y_val = self.y_home + (paso * side_scale * ramp * self.signo_y[i] * 0.85)
-            y[i] = y_val
-            x[i] = np.sqrt(max(self.x_home**2 - y_val**2, (self.L1 + 10.0)**2))
+            x[i] = self.x_home + (paso * side_scale * direction_x * kx * ramp)
+            y[i] = self.y_home + (paso * side_scale * ramp * self.signo_y[i] * ky)
             z[i] = self.z_home + (z_offset * ramp * self.signo_z)
 
         return x, y, z, phases

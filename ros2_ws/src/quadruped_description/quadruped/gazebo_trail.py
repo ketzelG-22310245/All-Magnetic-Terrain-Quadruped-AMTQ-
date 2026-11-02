@@ -10,8 +10,17 @@ import time
 class GazeboTrail(Node):
     def __init__(self):
         super().__init__('gazebo_trail')
+        subprocess.Popen(
+            ['ros2', 'run', 'ros_gz_bridge', 'parameter_bridge',
+             '/world/default/dynamic_pose/info@tf2_msgs/msg/TFMessage[gz.msgs.Pose_V',
+             '/world/empty/dynamic_pose/info@tf2_msgs/msg/TFMessage[gz.msgs.Pose_V'],
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+        )
         self.sub_def = self.create_subscription(
             TFMessage, '/world/default/dynamic_pose/info', self.pose_cb, 10
+        )
+        self.sub_emp = self.create_subscription(
+            TFMessage, '/world/empty/dynamic_pose/info', self.pose_cb, 10
         )
         self.start_x = None
         self.start_y = None
@@ -37,7 +46,14 @@ class GazeboTrail(Node):
     def pose_cb(self, msg):
         if not msg.transforms:
             return
-        t = msg.transforms[0]
+        t = None
+        for tf in msg.transforms:
+            name = tf.child_frame_id.lower()
+            if name == 'quadruped' or name.endswith('/quadruped') or name.endswith('::quadruped'):
+                t = tf
+                break
+        if t is None:
+            t = msg.transforms[0]
         x = t.transform.translation.x
         y = t.transform.translation.y
         z = t.transform.translation.z
@@ -77,22 +93,29 @@ class GazeboTrail(Node):
             self.last_marker_y = y
             self.marker_id += 1
 
-            sdf_dot = (
-                f"<sdf version='1.8'><model name='trail_dot_{self.marker_id}'>"
-                f"<static>true</static><pose>{x:.4f} {y:.4f} 0.002 0 0 0</pose>"
-                f"<link name='link'><visual name='vis'><geometry><box>"
-                f"<size>0.014 0.014 0.003</size></box></geometry>"
-                f"<material><ambient>0 1 0 1</ambient><diffuse>0 1 0 1</diffuse>"
-                f"<emissive>0 1 0 1</emissive></material>"
-                f"</visual></link></model></sdf>"
+            sdf_path = '/tmp/trail_dot.sdf'
+            with open(sdf_path, 'w') as f:
+                f.write(
+                    f"<?xml version='1.0'?><sdf version='1.8'>"
+                    f"<model name='trail_dot_{self.marker_id}'>"
+                    f"<static>true</static>"
+                    f"<pose>{x:.4f} {y:.4f} 0.005 0 0 0</pose>"
+                    f"<link name='link'><visual name='vis'><geometry><cylinder>"
+                    f"<radius>0.008</radius><length>0.004</length></cylinder></geometry>"
+                    f"<material><ambient>0 1 0 1</ambient><diffuse>0 1 0 1</diffuse>"
+                    f"<emissive>0 1 0 1</emissive></material>"
+                    f"</visual></link></model></sdf>"
+                )
+            req = (
+                f'sdf_filename: "{sdf_path}" name: "trail_dot_{self.marker_id}" '
+                f'allow_renaming: true pose: {{position: {{x: {x:.4f}, y: {y:.4f}, z: 0.005}}}}'
             )
-            req = f'sdf: "{sdf_dot}"'
             for world_name in ['empty', 'default']:
                 subprocess.Popen(
                     ['gz', 'service', '-s', f'/world/{world_name}/create',
                      '--reqtype', 'gz.msgs.EntityFactory',
                      '--reptype', 'gz.msgs.Boolean',
-                     '--timeout', '200', '--req', req],
+                     '--timeout', '500', '--req', req],
                     stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
                 )
 
