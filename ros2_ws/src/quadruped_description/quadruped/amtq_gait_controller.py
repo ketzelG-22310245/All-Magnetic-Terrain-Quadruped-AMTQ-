@@ -115,7 +115,7 @@ class AMTQGaitController(Node):
         self.L1, self.L2, self.L3 = 54.32, 80.00, 161.64
         self.coxa_axis_dir = np.array([-1.0, -1.0, -1.0, -1.0])
         self.S_vec = np.array([1.0, -1.0, -1.0, 1.0])
-        self.signo_y = np.array([1.0, -1.0, 1.0, -1.0])
+        self.signo_y = np.array([1.0, -1.0, -1.0, 1.0])
         self.signo_z = 1.0
         self.desfase = np.array([0.75, 0.00, 0.25, 0.50]) * self.T
 
@@ -631,7 +631,7 @@ class AMTQGaitController(Node):
             direction_x = -1.0 if i in [0, 1] else 1.0
 
             # Realimentación negativa corregida: (1.0 + steer) en [0, 2] y (1.0 - steer) en [1, 3]
-            side_scale = (1.0 + steer) if i in [0, 2] else (1.0 - steer)
+            side_scale = (1.0 + steer) if i in [0, 3] else (1.0 - steer)
 
             x[i] = self.x_home + (paso * side_scale * direction_x * kx * ramp)
             y[i] = self.y_home + (paso * side_scale * ramp * self.signo_y[i] * ky)
